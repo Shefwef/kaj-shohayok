@@ -9,11 +9,7 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 // Ensure auth routes are not protected
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-]);
+const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req) && isProtectedRoute(req)) {
