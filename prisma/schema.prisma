@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  clerkId        String   @unique @map("clerk_id")
+  email          String   @unique
+  firstName      String?  @map("first_name")
+  lastName       String?  @map("last_name")
+  avatarUrl      String?  @map("avatar_url")
+  organizationId String?  @map("organization_id")
+  roleId         String?  @map("role_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  role         Role?         @relation(fields: [roleId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  permissions    Json
+  organizationId String?  @map("organization_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  users        User[]
+
+  @@map("roles")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  settings  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users User[]
+  roles Role[]
+
+  @@map("organizations")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?  @map("user_id")
+  action       String
+  resourceType String   @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  details      Json?
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
