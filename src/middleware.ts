@@ -6,6 +6,8 @@ const isProtectedRoute = createRouteMatcher([
   "/api/tasks(.*)",
   "/api/users(.*)",
   "/api/analytics(.*)",
+  "/api/roles(.*)",
+  "/api/organizations(.*)",
 ]);
 
 // Ensure auth routes are not protected
