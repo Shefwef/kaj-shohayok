@@ -1,4 +1,4 @@
-import { SignUp } from "@clerk/nextjs";
+import { SignIn } from "@clerk/nextjs";
 
 export default function Page() {
   return (
@@ -6,9 +6,9 @@ export default function Page() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Kaj Shohayok</h1>
-          <p className="text-gray-600 mt-2">Create your account</p>
+          <p className="text-gray-600 mt-2">Sign in to your account</p>
         </div>
-        <SignUp />
+        <SignIn fallbackRedirectUrl="/dashboard" signUpUrl="/sign-up" />
       </div>
     </div>
   );
