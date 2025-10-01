@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import Link from "next/link";
@@ -22,7 +22,7 @@ interface FormData {
   dependencies: string[];
 }
 
-export default function NewTaskPage() {
+function NewTaskPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedProjectId = searchParams.get("projectId");
@@ -66,7 +66,7 @@ export default function NewTaskPage() {
     setLoading(true);
     setErrors({});
 
-    // Basic validation
+    // basic validation
     if (!formData.title.trim()) {
       setErrors({ title: "Task title is required" });
       setLoading(false);
@@ -95,7 +95,7 @@ export default function NewTaskPage() {
       const result = await response.json();
 
       if (result.success) {
-        // Redirect to task detail page or tasks list
+        // redirect to task detail page
         router.push(`/dashboard/tasks/${result.data._id}`);
       } else {
         setErrors({ general: result.error || "Failed to create task" });
@@ -119,7 +119,7 @@ export default function NewTaskPage() {
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
+        {/* header */}
         <div className="mb-6">
           <Link
             href="/dashboard/tasks"
@@ -136,7 +136,7 @@ export default function NewTaskPage() {
           </p>
         </div>
 
-        {/* Form */}
+        {/* form */}
         <div className="bg-white shadow rounded-lg">
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {errors.general && (
@@ -145,7 +145,7 @@ export default function NewTaskPage() {
               </div>
             )}
 
-            {/* Task Title */}
+            {/* task title */}
             <div>
               <label
                 htmlFor="title"
@@ -167,7 +167,7 @@ export default function NewTaskPage() {
               )}
             </div>
 
-            {/* Description */}
+            {/* description */}
             <div>
               <label
                 htmlFor="description"
@@ -187,7 +187,7 @@ export default function NewTaskPage() {
               />
             </div>
 
-            {/* Project Selection */}
+            {/* project selection */}
             <div>
               <label
                 htmlFor="projectId"
@@ -222,7 +222,7 @@ export default function NewTaskPage() {
               )}
             </div>
 
-            {/* Status and Priority */}
+            {/* status and priority */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label
@@ -274,7 +274,7 @@ export default function NewTaskPage() {
               </div>
             </div>
 
-            {/* Assigned To and Due Date */}
+            {/* assigned to and due date */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label
@@ -324,7 +324,7 @@ export default function NewTaskPage() {
               </div>
             </div>
 
-            {/* Project Context */}
+            {/* project context */}
             {selectedProject && (
               <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                 <div className="flex">
@@ -341,7 +341,6 @@ export default function NewTaskPage() {
               </div>
             )}
 
-            {/* Submit Buttons */}
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
               <Link
                 href="/dashboard/tasks"
@@ -361,5 +360,13 @@ export default function NewTaskPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function NewTaskPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <NewTaskPageContent />
+    </Suspense>
   );
 }

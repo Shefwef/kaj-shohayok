@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db/postgres";
 import { createApiResponse } from "@/lib/utils";
 import { withRateLimit } from "@/lib/rate-limit";
-import { createUserSchema, updateUserSchema } from "@/lib/validations/auth";
+import { createUserSchema } from "@/lib/validations/auth";
 
 export async function GET(request: NextRequest) {
   try {
