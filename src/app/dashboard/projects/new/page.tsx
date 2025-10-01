@@ -86,7 +86,7 @@ export default function NewProjectPage() {
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
+        {/* header */}
         <div className="mb-6">
           <Link
             href="/dashboard/projects"
@@ -103,7 +103,7 @@ export default function NewProjectPage() {
           </p>
         </div>
 
-        {/* Form */}
+        {/* form */}
         <div className="bg-white shadow rounded-lg">
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {errors.general && (
@@ -112,7 +112,7 @@ export default function NewProjectPage() {
               </div>
             )}
 
-            {/* Project Name */}
+            {/* project name */}
             <div>
               <label
                 htmlFor="name"
@@ -134,7 +134,7 @@ export default function NewProjectPage() {
               )}
             </div>
 
-            {/* Description */}
+            {/* description */}
             <div>
               <label
                 htmlFor="description"
@@ -154,7 +154,7 @@ export default function NewProjectPage() {
               />
             </div>
 
-            {/* Priority */}
+            {/* priority */}
             <div>
               <label
                 htmlFor="priority"
@@ -180,7 +180,7 @@ export default function NewProjectPage() {
               </select>
             </div>
 
-            {/* Dates */}
+            {/* dates */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
                 <label
@@ -218,7 +218,7 @@ export default function NewProjectPage() {
               </div>
             </div>
 
-            {/* Tags */}
+            {/* tags */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Tags
@@ -265,7 +265,7 @@ export default function NewProjectPage() {
               </div>
             </div>
 
-            {/* Submit Buttons */}
+            {/* submit buttons */}
             <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
               <Link
                 href="/dashboard/projects"

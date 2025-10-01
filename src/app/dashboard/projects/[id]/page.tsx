@@ -176,7 +176,7 @@ export default function ProjectDetailPage() {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* header */}
         <div className="mb-6">
           <Link
             href="/dashboard/projects"
@@ -187,7 +187,7 @@ export default function ProjectDetailPage() {
           </Link>
         </div>
 
-        {/* Project Overview */}
+        {/* project overview */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="px-6 py-5">
             <div className="flex items-center justify-between">
@@ -229,7 +229,7 @@ export default function ProjectDetailPage() {
               <p className="mt-4 text-gray-600">{project.description}</p>
             )}
 
-            {/* Project Meta Info */}
+            {/* project meta info */}
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4 text-gray-400" />
@@ -271,7 +271,7 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-            {/* Progress Bar */}
+            {/* progress bar */}
             <div className="mt-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium text-gray-900">
@@ -289,7 +289,7 @@ export default function ProjectDetailPage() {
               </div>
             </div>
 
-            {/* Tags */}
+            {/* tags */}
             {project.tags.length > 0 && (
               <div className="mt-4">
                 <div className="flex items-center space-x-2">
@@ -310,7 +310,7 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Tasks Section */}
+        {/* tasks section */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-5 border-b border-gray-200">
             <div className="flex items-center justify-between">
