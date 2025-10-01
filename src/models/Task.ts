@@ -105,7 +105,6 @@ const TaskSchema: Schema = new Schema(
   }
 );
 
-// Add indexes for better query performance
 TaskSchema.index({ projectId: 1, status: 1 });
 TaskSchema.index({ assigneeId: 1 });
 TaskSchema.index({ reporterId: 1 });
