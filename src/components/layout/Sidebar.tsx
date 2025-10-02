@@ -7,8 +7,6 @@ import {
   FolderKanban,
   CheckSquare,
   BarChart3,
-  Users,
-  Settings,
   Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -33,16 +31,6 @@ const navigation = [
     name: "Analytics",
     href: "/dashboard/analytics",
     icon: BarChart3,
-  },
-  {
-    name: "Team",
-    href: "/dashboard/team",
-    icon: Users,
-  },
-  {
-    name: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
   },
 ];
 

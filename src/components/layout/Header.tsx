@@ -28,7 +28,6 @@ export default function Header() {
 
       {/* Right side */}
       <div className="flex items-center gap-x-4 lg:gap-x-6">
-        {/* Notifications */}
         <button
           type="button"
           className="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500"
@@ -37,13 +36,11 @@ export default function Header() {
           <Bell className="h-6 w-6" aria-hidden="true" />
         </button>
 
-        {/* Separator */}
         <div
           className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200"
           aria-hidden="true"
         />
 
-        {/* Profile */}
         <UserButton afterSignOutUrl="/" />
       </div>
     </div>

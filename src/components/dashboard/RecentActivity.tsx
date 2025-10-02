@@ -18,10 +18,10 @@ interface Task {
   title: string;
   status: string;
   priority: string;
-  projectId: {
+  projectId?: {
     _id: string;
     name: string;
-  };
+  } | null;
   createdAt: string;
 }
 
@@ -56,11 +56,17 @@ export default function RecentActivity() {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {[...Array(2)].map((_, i) => (
-          <div key={i} className="animate-pulse bg-white rounded-lg shadow p-6">
+          <div
+            key={`loading-card-${i}`}
+            className="animate-pulse bg-white rounded-lg shadow p-6"
+          >
             <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
             <div className="space-y-3">
               {[...Array(3)].map((_, j) => (
-                <div key={j} className="h-16 bg-gray-200 rounded"></div>
+                <div
+                  key={`loading-item-${i}-${j}`}
+                  className="h-16 bg-gray-200 rounded"
+                ></div>
               ))}
             </div>
           </div>
@@ -164,7 +170,7 @@ export default function RecentActivity() {
                         {task.title}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        in {task.projectId.name}
+                        in {task.projectId?.name || "No Project"}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
                         Created {formatDateTime(task.createdAt)}
