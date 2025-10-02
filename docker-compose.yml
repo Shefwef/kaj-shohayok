@@ -1,0 +1,214 @@
+# 🚀 Kaj Shohayok - Complete Development Environment
+# Docker Compose with PostgreSQL, MongoDB, Redis, and Application
+
+services:
+  # ================================================================
+  # 🗄️ PostgreSQL Database - User Management & RBAC
+  # ================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: kaj-shohayok-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kaj_shohayok
+      POSTGRES_USER: kaj_user
+      POSTGRES_PASSWORD: kaj_secure_password_2024
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - kaj-shohayok-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kaj_user -d kaj_shohayok"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+  # ================================================================
+  # 🍃 MongoDB Database - Projects, Tasks & Analytics
+  # ================================================================
+  mongodb:
+    image: mongo:7-jammy
+    container_name: kaj-shohayok-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: kaj_mongo_admin
+      MONGO_INITDB_ROOT_PASSWORD: kaj_mongo_secure_2024
+      MONGO_INITDB_DATABASE: kaj_shohayok
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+      - ./docker/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - kaj-shohayok-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/kaj_shohayok --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    command: mongod --auth
+
+  # ================================================================
+  # 🔴 Redis Cache - Rate Limiting & Sessions (Optional)
+  # ================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: kaj-shohayok-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - kaj-shohayok-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    command: redis-server --appendonly yes --requirepass kaj_redis_secure_2024
+
+  # ================================================================
+  # 🚀 Kaj Shohayok Application - Next.js App
+  # ================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        NODE_ENV: development
+    container_name: kaj-shohayok-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      # Application Settings
+      NODE_ENV: development
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      NEXT_TELEMETRY_DISABLED: 1
+
+      # Database Connections
+      DATABASE_URL: "postgresql://kaj_user:kaj_secure_password_2024@postgres:5432/kaj_shohayok"
+      MONGODB_URI: "mongodb://kaj_mongo_admin:kaj_mongo_secure_2024@mongodb:27017/kaj_shohayok?authSource=admin"
+
+      # Redis Connection (Optional)
+      REDIS_URL: "redis://:kaj_redis_secure_2024@redis:6379"
+      UPSTASH_REDIS_REST_URL: "http://redis:6379"
+      UPSTASH_REDIS_REST_TOKEN: "kaj_redis_secure_2024"
+
+      # Clerk Authentication (Replace with your keys)
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-pk_test_placeholder}"
+      CLERK_SECRET_KEY: "${CLERK_SECRET_KEY:-sk_test_placeholder}"
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
+
+      # Security & Rate Limiting
+      RATE_LIMIT_REQUESTS_PER_MINUTE: 100
+      JWT_SECRET: "kaj_jwt_ultra_secure_key_2024_change_in_production"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - kaj-shohayok-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
+
+  # ================================================================
+  # 📊 Adminer - Database Administration (Optional)
+  # ================================================================
+  adminer:
+    image: adminer:latest
+    container_name: kaj-shohayok-adminer
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha
+    networks:
+      - kaj-shohayok-network
+
+  # ================================================================
+  # 🍃 Mongo Express - MongoDB Administration (Optional)
+  # ================================================================
+  mongo-express:
+    image: mongo-express:latest
+    container_name: kaj-shohayok-mongo-express
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: kaj_mongo_admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: kaj_mongo_secure_2024
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin_password
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+    networks:
+      - kaj-shohayok-network
+
+# ================================================================
+# 🌐 Networks Configuration
+# ================================================================
+networks:
+  kaj-shohayok-network:
+    driver: bridge
+    name: kaj-shohayok-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ================================================================
+# 💾 Volumes for Data Persistence
+# ================================================================
+volumes:
+  postgres_data:
+    driver: local
+    name: kaj-shohayok-postgres-data
+
+  mongodb_data:
+    driver: local
+    name: kaj-shohayok-mongodb-data
+
+  mongodb_config:
+    driver: local
+    name: kaj-shohayok-mongodb-config
+
+  redis_data:
+    driver: local
+    name: kaj-shohayok-redis-data

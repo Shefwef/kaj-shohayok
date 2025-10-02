@@ -554,7 +554,7 @@ docker-compose up -d
 
 # All services automatically started:
 # ✔ PostgreSQL (Users & RBAC data)
-# ✔ MongoDB (Projects & Tasks)  
+# ✔ MongoDB (Projects & Tasks)
 # ✔ Redis (Caching & Rate Limiting)
 # ✔ Next.js App (Main Application)
 # ✔ Adminer (PostgreSQL Admin UI)

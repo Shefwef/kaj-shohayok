@@ -1,0 +1,384 @@
+{
+  "info": {
+    "_postman_id": "36833731-fe0565bc-7e48-4b31-bc0a-22c46bc8302a",
+    "name": "KajShohayok API Collection",
+    "description": "Postman collection covering all backend endpoints for KajShohayok project management system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Get All Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects?page=1&limit=10&status=active",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "active" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"University Management System\",\n  \"description\": \"Complete student and faculty management platform for IUT\",\n  \"status\": \"active\",\n  \"priority\": \"high\",\n  \"ownerId\": \"user_33TjM6Wa82v5dD89yeacJ3B38yA\",\n  \"startDate\": \"2025-10-01T23:30:00.000Z\",\n  \"endDate\": \"2025-12-15T23:59:59.000Z\",\n  \"tags\": [\"education\", \"nextjs\", \"mongodb\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects"]
+            }
+          }
+        },
+        {
+          "name": "Get Project by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", ":id"],
+              "variable": [{ "key": "id", "value": "670c8f3a4b2d1e5f6a789012" }]
+            }
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"University Management System - Updated\",\n  \"status\": \"in_progress\",\n  \"progress\": 78,\n  \"priority\": \"critical\",\n  \"updatedAt\": \"2025-10-02T02:15:30.456Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", ":id"],
+              "variable": [{ "key": "id", "value": "670c8f3a4b2d1e5f6a789012" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/projects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "projects", ":id"],
+              "variable": [{ "key": "id", "value": "670c8f3a4b2d1e5f6a789012" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?page=1&limit=15&assigneeId={{user_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "15" },
+                { "key": "assigneeId", "value": "{{user_id}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Design user authentication flow\",\n  \"description\": \"Create wireframes and user journey maps for login/signup process with social auth integration\",\n  \"status\": \"todo\",\n  \"priority\": \"high\",\n  \"projectId\": \"670c8f3a4b2d1e5f6a789012\",\n  \"assigneeId\": \"user_33TjM6Wa82v5dD89yeacJ3B38yA\",\n  \"reporterId\": \"user_33TjM6Wa82v5dD89yeacJ3B38yA\",\n  \"dueDate\": \"2025-10-02T03:45:00.000Z\",\n  \"estimatedHours\": 12,\n  \"tags\": [\"design\", \"ui/ux\", \"authentication\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"]
+            }
+          }
+        },
+        {
+          "name": "Get Task by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", ":id"],
+              "variable": [{ "key": "id", "value": "670c9b2d5e3f7a8c9d012345" }]
+            }
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"priority\": \"critical\",\n  \"actualHours\": 8,\n  \"progress\": 60,\n  \"updatedAt\": \"2025-10-02T01:30:45.789Z\",\n  \"notes\": \"Authentication flow design completed, moving to implementation phase\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", ":id"],
+              "variable": [{ "key": "id", "value": "670c9b2d5e3f7a8c9d012345" }]
+            }
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks", ":id"],
+              "variable": [{ "key": "id", "value": "670c9b2d5e3f7a8c9d012345" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{clerk_session_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/analytics",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "analytics"]
+        }
+      }
+    },
+    {
+      "name": "Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{clerk_session_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "users"]
+        }
+      }
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clerk_session_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"developer\",\n  \"description\": \"Software development team member with task management access\",\n  \"permissions\": [\n    \"read:project\",\n    \"create:task\",\n    \"read:task\",\n    \"update:task\",\n    \"read:analytics\"\n  ],\n  \"organizationId\": 1,\n  \"createdBy\": \"user_33TjM6Wa82v5dD89yeacJ3B38yA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{clerk_session_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/organizations",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "organizations"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "clerk_session_token",
+      "value": "eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18zM1NzYUl4R0kwWElqd0w4WnRJcTZFOTBEM3UiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAiLCJleHAiOjE3NTkzNjU0NDgsImZ2YSI6WzIwOSwtMV0sImlhdCI6MTc1OTM2NTM4OCwiaXNzIjoiaHR0cHM6Ly9oYXJtbGVzcy1oZXJvbi05OS5jbGVyay5hY2NvdW50cy5kZXYiLCJuYmYiOjE3NTkzNjUzNzgsInNpZCI6InNlc3NfMzNUdEd3N2NYYWtqaEJiMWVOeTh6Z1c0Tk94Iiwic3RzIjoiYWN0aXZlIiwic3ViIjoidXNlcl8zM1RqTTZXYTgydjVkRDg5eWVhY0ozQjM4eUEiLCJ2IjoyfQ.wyL3MqtMwCsUSJ37n7QVhJh6HoiUOEIKACDOzaqMklXdIjtb05OO8hlXOZ7OlpYWzNg59MG8tUhgANoK8pyj8L0h2WC0qj8X2GyhQ4Yl-j-MUI5dx8WW2RAVoi8wQc_awU_Lkd_mClWodzzOk0qKbfwZHk_LN3t9eoYao37ZOyW4k-K5zNm53y5hSp7u6PNTMMf8MWS36FdEq8UfAja17KoyjZ45sQAcMU2gIxdvNLhn14O1_wW7r5LdHM1SPRQnyr2GnUnnBRtr8x_CjupK2gMqAS-6uIAh3xIpAJTEKfxfN-D4c55qaKUY8izcYB0GgK8ws_d2teFE2aRNCedtQA"
+    },
+    {
+      "key": "user_id",
+      "value": "user_33TjM6Wa82v5dD89yeacJ3B38yA"
+    }
+  ]
+}
