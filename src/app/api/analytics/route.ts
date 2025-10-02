@@ -3,232 +3,224 @@ import { auth } from "@clerk/nextjs/server";
 import connectMongoDB from "@/lib/db/mongodb";
 import Project from "@/models/Project";
 import Task from "@/models/Task";
-import { createApiResponse } from "@/lib/utils";
-import { withRateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   try {
-    const rateCheck = await withRateLimit(request, 50);
-    if (!rateCheck.success) {
-      return NextResponse.json(
-        createApiResponse(false, null, rateCheck.error),
-        { status: 429 }
-      );
-    }
-
+    // Check authentication
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json(createApiResponse(false, null, "Unauthorized"), {
-        status: 401,
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      );
     }
 
     await connectMongoDB();
 
-    // get projects user has access to
+    // Get projects user has access to
     const userProjects = await Project.find({
       $or: [{ ownerId: userId }, { teamMembers: { $in: [userId] } }],
-    })
-      .select("_id")
-      .lean();
+    }).lean();
 
     const projectIds = userProjects.map((p) => p._id);
 
-    // Project Analytics
-    const projectStats = await Project.aggregate([
-      {
-        $match: {
-          $or: [{ ownerId: userId }, { teamMembers: { $in: [userId] } }],
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          totalProjects: { $sum: 1 },
-          activeProjects: {
-            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
-          },
-          completedProjects: {
-            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
-          },
-          archivedProjects: {
-            $sum: { $cond: [{ $eq: ["$status", "archived"] }, 1, 0] },
-          },
-          averageProgress: { $avg: "$progress" },
-        },
-      },
-    ]);
+    // Project statistics
+    const projectStats = {
+      total: userProjects.length,
+      active: userProjects.filter((p) => p.status === "active").length,
+      completed: userProjects.filter((p) => p.status === "completed").length,
+      archived: userProjects.filter((p) => p.status === "archived").length,
+    };
 
-    const projectsByPriority = await Project.aggregate([
-      {
-        $match: {
-          $or: [{ ownerId: userId }, { teamMembers: { $in: [userId] } }],
-        },
-      },
-      {
-        $group: {
-          _id: "$priority",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
+    // Project priority distribution
+    const projectPriorityStats = userProjects.reduce((acc: any, project) => {
+      acc[project.priority] = (acc[project.priority] || 0) + 1;
+      return acc;
+    }, {});
 
-    // Task Analytics
-    const taskStats = await Task.aggregate([
-      {
-        $match: {
-          $or: [
-            { assigneeId: userId },
-            { reporterId: userId },
-            { projectId: { $in: projectIds } },
-          ],
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          totalTasks: { $sum: 1 },
-          todoTasks: {
-            $sum: { $cond: [{ $eq: ["$status", "todo"] }, 1, 0] },
-          },
-          inProgressTasks: {
-            $sum: { $cond: [{ $eq: ["$status", "in_progress"] }, 1, 0] },
-          },
-          reviewTasks: {
-            $sum: { $cond: [{ $eq: ["$status", "review"] }, 1, 0] },
-          },
-          doneTasks: {
-            $sum: { $cond: [{ $eq: ["$status", "done"] }, 1, 0] },
-          },
-        },
-      },
-    ]);
+    // Average project progress
+    const avgProgress =
+      userProjects.length > 0
+        ? Math.round(
+            userProjects.reduce((sum, p) => sum + (p.progress || 0), 0) /
+              userProjects.length
+          )
+        : 0;
 
-    const tasksByPriority = await Task.aggregate([
-      {
-        $match: {
-          $or: [
-            { assigneeId: userId },
-            { reporterId: userId },
-            { projectId: { $in: projectIds } },
-          ],
-        },
-      },
-      {
-        $group: {
-          _id: "$priority",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
+    // Get tasks for user's projects
+    const tasks = await Task.find({
+      projectId: { $in: projectIds },
+    }).lean();
 
-    const overdueTasks = await Task.countDocuments({
-      $or: [
-        { assigneeId: userId },
-        { reporterId: userId },
-        { projectId: { $in: projectIds } },
-      ],
-      dueDate: { $lt: new Date() },
-      status: { $ne: "done" },
-    });
+    // Task statistics
+    const taskStats = {
+      total: tasks.length,
+      todo: tasks.filter((t) => t.status === "todo").length,
+      inProgress: tasks.filter((t) => t.status === "in_progress").length,
+      review: tasks.filter((t) => t.status === "review").length,
+      done: tasks.filter((t) => t.status === "done").length,
+    };
 
-    // recent activity that is of last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Task priority distribution
+    const taskPriorityStats = tasks.reduce((acc: any, task) => {
+      acc[task.priority] = (acc[task.priority] || 0) + 1;
+      return acc;
+    }, {});
 
-    const recentProjects = await Project.find({
-      $or: [{ ownerId: userId }, { teamMembers: { $in: [userId] } }],
-      createdAt: { $gte: thirtyDaysAgo },
-    })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
+    // Overdue tasks
+    const overdueTasks = tasks.filter(
+      (task) =>
+        task.dueDate &&
+        new Date(task.dueDate) < new Date() &&
+        task.status !== "done"
+    ).length;
 
+    // Completion rate
+    const completionRate =
+      taskStats.total > 0
+        ? ((taskStats.done / taskStats.total) * 100).toFixed(1)
+        : "0";
+
+    // Recent projects (last 5)
+    const recentProjects = userProjects
+      .sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
+      .slice(0, 5)
+      .map((p) => ({
+        name: p.name,
+        status: p.status,
+        progress: p.progress || 0,
+        updatedAt: p.updatedAt,
+      }));
+
+    // Recent tasks (last 10)
     const recentTasks = await Task.find({
-      $or: [
-        { assigneeId: userId },
-        { reporterId: userId },
-        { projectId: { $in: projectIds } },
-      ],
-      createdAt: { $gte: thirtyDaysAgo },
+      projectId: { $in: projectIds },
     })
-      .populate("projectId", "name")
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1 })
       .limit(10)
+      .populate("projectId", "name")
       .lean();
 
-    // productivity metrics that is tasks completed per day for the last 7 days
+    // Productivity data (tasks completed per day for last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const completedTasksDaily = await Task.aggregate([
-      {
-        $match: {
-          assigneeId: userId,
-          status: "done",
-          updatedAt: { $gte: sevenDaysAgo },
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$updatedAt",
-            },
-          },
-          count: { $sum: 1 },
-          totalHours: { $sum: "$actualHours" },
-        },
-      },
-      {
-        $sort: { _id: 1 },
-      },
-    ]);
+    const productivity = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
 
+      const completedCount = tasks.filter((task) => {
+        if (task.status !== "done" || !task.updatedAt) return false;
+        const taskDate = new Date(task.updatedAt).toISOString().split("T")[0];
+        return taskDate === dateStr;
+      }).length;
+
+      productivity.push({
+        _id: dateStr,
+        count: completedCount,
+      });
+    }
+
+    // Format data for charts
     const analytics = {
       projects: {
-        total: projectStats[0]?.totalProjects || 0,
-        active: projectStats[0]?.activeProjects || 0,
-        completed: projectStats[0]?.completedProjects || 0,
-        archived: projectStats[0]?.archivedProjects || 0,
-        averageProgress: projectStats[0]?.averageProgress || 0,
-        byPriority: projectsByPriority.reduce((acc: any, item) => {
-          acc[item._id] = item.count;
-          return acc;
-        }, {}),
+        total: projectStats.total,
+        active: projectStats.active,
+        completed: projectStats.completed,
+        archived: projectStats.archived,
+        averageProgress: avgProgress,
+        byPriority: projectPriorityStats,
       },
       tasks: {
-        total: taskStats[0]?.totalTasks || 0,
-        todo: taskStats[0]?.todoTasks || 0,
-        inProgress: taskStats[0]?.inProgressTasks || 0,
-        review: taskStats[0]?.reviewTasks || 0,
-        done: taskStats[0]?.doneTasks || 0,
+        total: taskStats.total,
+        todo: taskStats.todo,
+        inProgress: taskStats.inProgress,
+        review: taskStats.review,
+        done: taskStats.done,
         overdue: overdueTasks,
-        completionRate:
-          taskStats[0]?.totalTasks > 0
-            ? (
-                ((taskStats[0]?.doneTasks || 0) / taskStats[0]?.totalTasks) *
-                100
-              ).toFixed(2)
-            : "0",
-        byPriority: tasksByPriority.reduce((acc: any, item) => {
-          acc[item._id] = item.count;
-          return acc;
-        }, {}),
+        completionRate,
+        byPriority: taskPriorityStats,
       },
       recent: {
         projects: recentProjects,
-        tasks: recentTasks,
+        tasks: recentTasks.map((t) => ({
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          updatedAt: t.updatedAt,
+          projectName: (t.projectId as any)?.name || "Unknown",
+        })),
       },
-      productivity: completedTasksDaily,
+      productivity,
+      charts: {
+        projectStatus: [
+          { name: "Active", value: projectStats.active, color: "#8884d8" },
+          {
+            name: "Completed",
+            value: projectStats.completed,
+            color: "#82ca9d",
+          },
+          { name: "Archived", value: projectStats.archived, color: "#ffc658" },
+        ],
+        taskStatus: [
+          { name: "To Do", value: taskStats.todo, color: "#ff7300" },
+          {
+            name: "In Progress",
+            value: taskStats.inProgress,
+            color: "#387908",
+          },
+          { name: "Review", value: taskStats.review, color: "#ff7f0e" },
+          { name: "Done", value: taskStats.done, color: "#2ca02c" },
+        ],
+        priorityDistribution: Object.entries({
+          ...projectPriorityStats,
+          ...taskPriorityStats,
+        }).reduce((acc, [priority, count]) => {
+          const existing = acc.find(
+            (item) =>
+              item.name === priority.charAt(0).toUpperCase() + priority.slice(1)
+          );
+          if (existing) {
+            existing.value += count as number;
+          } else {
+            acc.push({
+              name: priority.charAt(0).toUpperCase() + priority.slice(1),
+              value: count as number,
+              color:
+                priority === "high" || priority === "critical"
+                  ? "#d62728"
+                  : priority === "medium"
+                  ? "#ff7f0e"
+                  : "#2ca02c",
+            });
+          }
+          return acc;
+        }, [] as Array<{ name: string; value: number; color: string }>),
+      },
     };
 
-    return NextResponse.json(createApiResponse(true, analytics));
+    return NextResponse.json({
+      success: true,
+      data: analytics,
+      error: null,
+    });
   } catch (error) {
     console.error("Error fetching analytics:", error);
     return NextResponse.json(
-      createApiResponse(false, null, "Internal server error"),
+      {
+        success: false,
+        data: null,
+        error: "Internal server error: " + (error as Error).message,
+      },
       { status: 500 }
     );
   }
