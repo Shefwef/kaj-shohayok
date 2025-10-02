@@ -29,9 +29,20 @@ export async function GET(
 
     const { id } = await params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    console.log("Received project ID:", id, "Type:", typeof id);
+
+    if (!id || typeof id !== "string") {
+      console.error("Project ID is missing or not a string:", id);
       return NextResponse.json(
-        createApiResponse(false, null, "Invalid project ID"),
+        createApiResponse(false, null, "Project ID is required"),
+        { status: 400 }
+      );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.error("Invalid MongoDB ObjectId format:", id);
+      return NextResponse.json(
+        createApiResponse(false, null, "Invalid project ID format"),
         { status: 400 }
       );
     }

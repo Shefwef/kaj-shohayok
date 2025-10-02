@@ -14,7 +14,7 @@ interface Project {
 interface FormData {
   title: string;
   description: string;
-  status: "todo" | "in-progress" | "review" | "completed";
+  status: "todo" | "in_progress" | "review" | "done";
   priority: "low" | "medium" | "high" | "critical";
   projectId: string;
   assignedTo?: string;
@@ -52,10 +52,15 @@ function NewTaskPageContent() {
       const result = await response.json();
 
       if (result.success) {
-        setProjects(result.data);
+        // Handle nested projects data structure
+        const projectsData = result.data.projects || result.data || [];
+        setProjects(Array.isArray(projectsData) ? projectsData : []);
+      } else {
+        setProjects([]);
       }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
+      setProjects([]);
     } finally {
       setProjectsLoading(false);
     }
@@ -87,7 +92,7 @@ function NewTaskPageContent() {
         },
         body: JSON.stringify({
           ...formData,
-          assignedTo: formData.assignedTo || undefined,
+          assigneeId: formData.assignedTo || undefined,
           dueDate: formData.dueDate || undefined,
         }),
       });
@@ -95,8 +100,8 @@ function NewTaskPageContent() {
       const result = await response.json();
 
       if (result.success) {
-        // redirect to task detail page
-        router.push(`/dashboard/tasks/${result.data._id}`);
+        // redirect to tasks list page
+        router.push("/dashboard/tasks");
       } else {
         setErrors({ general: result.error || "Failed to create task" });
       }
@@ -114,7 +119,9 @@ function NewTaskPageContent() {
     }
   };
 
-  const selectedProject = projects.find((p) => p._id === formData.projectId);
+  const selectedProject = Array.isArray(projects)
+    ? projects.find((p) => p._id === formData.projectId)
+    : null;
 
   return (
     <DashboardLayout>
@@ -161,6 +168,7 @@ function NewTaskPageContent() {
                 onChange={(e) => handleInputChange("title", e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 placeholder="Enter task title"
+                suppressHydrationWarning={true}
               />
               {errors.title && (
                 <p className="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -210,11 +218,12 @@ function NewTaskPageContent() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
                   <option value="">Select a project</option>
-                  {projects.map((project) => (
-                    <option key={project._id} value={project._id}>
-                      {project.name}
-                    </option>
-                  ))}
+                  {Array.isArray(projects) &&
+                    projects.map((project) => (
+                      <option key={project._id} value={project._id}>
+                        {project.name}
+                      </option>
+                    ))}
                 </select>
               )}
               {errors.projectId && (
@@ -243,9 +252,9 @@ function NewTaskPageContent() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
                   <option value="todo">To Do</option>
-                  <option value="in-progress">In Progress</option>
+                  <option value="in_progress">In Progress</option>
                   <option value="review">Review</option>
-                  <option value="completed">Completed</option>
+                  <option value="done">Done</option>
                 </select>
               </div>
               <div>

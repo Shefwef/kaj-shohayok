@@ -2,13 +2,13 @@
  * Manually sync users from Clerk to PostgreSQL without webhooks
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { clerkClient } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/db/postgres';
+import { NextRequest, NextResponse } from "next/server";
+import { clerkClient } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/db/postgres";
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔄 Starting user sync from Clerk to PostgreSQL...');
+    console.log("🔄 Starting user sync from Clerk to PostgreSQL...");
 
     // Get all users from Clerk
     const client = await clerkClient();
@@ -17,16 +17,16 @@ export async function POST(request: NextRequest) {
 
     // Get default role and organization
     const defaultRole = await prisma.role.findFirst({
-      where: { name: 'member' }
+      where: { name: "member" },
     });
 
     const defaultOrg = await prisma.organization.findFirst({
-      where: { slug: 'default' }
+      where: { slug: "default" },
     });
 
     if (!defaultRole || !defaultOrg) {
       return NextResponse.json(
-        { error: 'Default role or organization not found' },
+        { error: "Default role or organization not found" },
         { status: 400 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
         // Check if user already exists in PostgreSQL
         const existingUser = await prisma.user.findFirst({
-          where: { clerkId: clerkUser.id }
+          where: { clerkId: clerkUser.id },
         });
 
         if (existingUser) {
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
             where: { id: existingUser.id },
             data: {
               email: email,
-              firstName: clerkUser.firstName || '',
-              lastName: clerkUser.lastName || '',
+              firstName: clerkUser.firstName || "",
+              lastName: clerkUser.lastName || "",
               avatarUrl: clerkUser.imageUrl || null,
             },
           });
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
             data: {
               clerkId: clerkUser.id,
               email: email,
-              firstName: clerkUser.firstName || '',
-              lastName: clerkUser.lastName || '',
+              firstName: clerkUser.firstName || "",
+              lastName: clerkUser.lastName || "",
               avatarUrl: clerkUser.imageUrl || null,
               roleId: defaultRole.id,
               organizationId: defaultOrg.id,
@@ -91,18 +91,17 @@ export async function POST(request: NextRequest) {
       skipped: skippedCount,
     };
 
-    console.log('🎉 Sync completed!', summary);
+    console.log("🎉 Sync completed!", summary);
 
     return NextResponse.json({
       success: true,
-      message: 'Users synced successfully',
+      message: "Users synced successfully",
       summary,
     });
-
   } catch (error) {
-    console.error('❌ Sync error:', error);
+    console.error("❌ Sync error:", error);
     return NextResponse.json(
-      { error: 'Failed to sync users' },
+      { error: "Failed to sync users" },
       { status: 500 }
     );
   }
@@ -110,7 +109,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    message: 'User sync endpoint. Use POST to trigger sync.',
-    usage: 'POST /api/sync-users'
+    message: "User sync endpoint. Use POST to trigger sync.",
+    usage: "POST /api/sync-users",
   });
 }

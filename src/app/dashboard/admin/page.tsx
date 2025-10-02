@@ -141,33 +141,33 @@ export default function AdminDashboard() {
   // Check admin permissions
   const checkAdminAccess = async () => {
     if (!userId) {
-      router.push('/sign-in');
+      router.push("/sign-in");
       return;
     }
 
     try {
-      const response = await fetch('/api/users/me');
+      const response = await fetch("/api/users/me");
       if (response.ok) {
         const result = await response.json();
         const userRole = result.data?.role?.name;
-        const hasAdminAccess = userRole === 'admin';
-        
+        const hasAdminAccess = userRole === "admin";
+
         setIsAdmin(hasAdminAccess);
-        
+
         if (!hasAdminAccess) {
           // Redirect non-admin users
           setTimeout(() => {
-            router.push('/dashboard');
+            router.push("/dashboard");
           }, 3000);
         }
       } else {
         setIsAdmin(false);
-        router.push('/dashboard');
+        router.push("/dashboard");
       }
     } catch (error) {
-      console.error('Error checking admin access:', error);
+      console.error("Error checking admin access:", error);
       setIsAdmin(false);
-      router.push('/dashboard');
+      router.push("/dashboard");
     } finally {
       setChecking(false);
     }
@@ -415,13 +415,14 @@ export default function AdminDashboard() {
               Access Denied
             </h2>
             <p className="text-gray-600 mb-4">
-              You don't have admin privileges to access this page. Only users with admin role can access the admin dashboard.
+              You don't have admin privileges to access this page. Only users
+              with admin role can access the admin dashboard.
             </p>
             <p className="text-sm text-gray-500 mb-4">
               Redirecting you back to the dashboard in 3 seconds...
             </p>
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push("/dashboard")}
               className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
             >
               Go to Dashboard

@@ -89,6 +89,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createRoleSchema.parse(body);
 
+    // If organizationId is provided, check if the organization exists
+    if (validatedData.organizationId) {
+      const organizationExists = await prisma.organization.findUnique({
+        where: { id: validatedData.organizationId },
+      });
+
+      if (!organizationExists) {
+        return NextResponse.json(
+          createApiResponse(false, null, "Organization not found"),
+          { status: 400 }
+        );
+      }
+    }
+
     // checking if role name already exists in the organization
     const existingRole = await prisma.role.findFirst({
       where: {
@@ -107,14 +121,18 @@ export async function POST(request: NextRequest) {
     const role = await prisma.role.create({
       data: {
         name: validatedData.name,
-        description: validatedData.description,
+        description: validatedData.description || null,
         permissions: validatedData.permissions,
-        organizationId: validatedData.organizationId,
+        ...(validatedData.organizationId
+          ? { organizationId: validatedData.organizationId }
+          : {}),
       },
       include: {
-        organization: {
-          select: { name: true, slug: true },
-        },
+        organization: validatedData.organizationId
+          ? {
+              select: { name: true, slug: true },
+            }
+          : false,
         _count: {
           select: { users: true },
         },

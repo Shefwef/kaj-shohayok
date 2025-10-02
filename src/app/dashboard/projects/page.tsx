@@ -122,11 +122,13 @@ export default function ProjectsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                suppressHydrationWarning={true}
               />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              suppressHydrationWarning={true}
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
@@ -143,6 +145,7 @@ export default function ProjectsPage() {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  suppressHydrationWarning={true}
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
@@ -158,6 +161,7 @@ export default function ProjectsPage() {
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  suppressHydrationWarning={true}
                 >
                   <option value="all">All Priority</option>
                   <option value="low">Low</option>
@@ -289,13 +293,14 @@ export default function ProjectsPage() {
                       <Eye className="inline h-4 w-4 mr-1" />
                       View
                     </Link>
-                    <Link
-                      href={`/dashboard/projects/${project._id}/edit`}
-                      className="text-gray-600 hover:text-gray-900 text-sm font-medium"
+                    <button
+                      disabled
+                      className="text-gray-400 cursor-not-allowed text-sm font-medium"
+                      title="Edit functionality coming soon"
                     >
                       <Edit className="inline h-4 w-4 mr-1" />
                       Edit
-                    </Link>
+                    </button>
                   </div>
                   <button
                     onClick={() => handleDeleteProject(project._id)}

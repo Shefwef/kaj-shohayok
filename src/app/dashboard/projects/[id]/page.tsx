@@ -19,7 +19,7 @@ interface Task {
   _id: string;
   title: string;
   description: string;
-  status: "todo" | "in-progress" | "review" | "completed";
+  status: "todo" | "in_progress" | "review" | "done";
   priority: "low" | "medium" | "high" | "critical";
   assignedTo?: string;
   dueDate?: string;
@@ -30,8 +30,8 @@ interface Project {
   _id: string;
   name: string;
   description: string;
-  status: "planning" | "active" | "on-hold" | "completed";
-  priority: "low" | "medium" | "high" | "critical";
+  status: "planning" | "active" | "on_hold" | "completed" | "cancelled";
+  priority: "low" | "medium" | "high" | "urgent";
   startDate: string;
   endDate?: string;
   progress: number;
@@ -51,15 +51,36 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && typeof params.id === "string") {
       fetchProject();
       fetchTasks();
+    } else {
+      setError("Invalid project ID");
+      setLoading(false);
     }
   }, [params.id]);
 
   const fetchProject = async () => {
     try {
-      const response = await fetch(`/api/projects/${params.id}`);
+      const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
+
+      if (!projectId || typeof projectId !== "string") {
+        setError("Invalid project ID format");
+        return;
+      }
+
+      console.log("Fetching project with ID:", projectId);
+      const response = await fetch(`/api/projects/${projectId}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP ${response.status}: ${errorText}`);
+        setError(
+          `Failed to fetch project: ${response.status} ${response.statusText}`
+        );
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -68,6 +89,7 @@ export default function ProjectDetailPage() {
         setError(result.error || "Failed to fetch project");
       }
     } catch (error) {
+      console.error("Error fetching project:", error);
       setError("An error occurred while fetching project details");
     } finally {
       setLoading(false);
@@ -76,14 +98,38 @@ export default function ProjectDetailPage() {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch(`/api/tasks?projectId=${params.id}`);
+      const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
+
+      if (!projectId || typeof projectId !== "string") {
+        console.error("Invalid project ID for tasks fetch");
+        setTasks([]);
+        return;
+      }
+
+      console.log("Fetching tasks for project ID:", projectId);
+      const response = await fetch(`/api/tasks?projectId=${projectId}`);
+
+      if (!response.ok) {
+        console.error(
+          `Failed to fetch tasks: ${response.status} ${response.statusText}`
+        );
+        setTasks([]);
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
-        setTasks(result.data);
+        // Handle nested tasks data structure
+        const tasksData = result.data.tasks || result.data || [];
+        setTasks(Array.isArray(tasksData) ? tasksData : []);
+      } else {
+        console.error("Tasks fetch unsuccessful:", result.error);
+        setTasks([]);
       }
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
+      setTasks([]);
     } finally {
       setTasksLoading(false);
     }
@@ -110,10 +156,12 @@ export default function ProjectDetailPage() {
         return "text-green-800 bg-green-100";
       case "active":
         return "text-blue-800 bg-blue-100";
-      case "on-hold":
+      case "on_hold":
         return "text-yellow-800 bg-yellow-100";
       case "planning":
         return "text-purple-800 bg-purple-100";
+      case "cancelled":
+        return "text-red-800 bg-red-100";
       default:
         return "text-gray-800 bg-gray-100";
     }
@@ -121,9 +169,9 @@ export default function ProjectDetailPage() {
 
   const getTaskStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
+      case "done":
         return "text-green-800 bg-green-100";
-      case "in-progress":
+      case "in_progress":
         return "text-blue-800 bg-blue-100";
       case "review":
         return "text-yellow-800 bg-yellow-100";
@@ -167,10 +215,11 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const completedTasks = tasks.filter(
-    (task) => task.status === "completed"
+  const tasksArray = Array.isArray(tasks) ? tasks : [];
+  const completedTasks = tasksArray.filter(
+    (task) => task.status === "done"
   ).length;
-  const totalTasks = tasks.length;
+  const totalTasks = tasksArray.length;
   const taskProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
@@ -213,12 +262,13 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <Link
-                  href={`/dashboard/projects/${project._id}/edit`}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                <button
+                  disabled
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed"
+                  title="Edit functionality coming soon"
                 >
                   Edit Project
-                </Link>
+                </button>
                 <button className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                   <MoreVertical className="h-4 w-4" />
                 </button>
@@ -256,7 +306,8 @@ export default function ProjectDetailPage() {
                 <div className="text-sm">
                   <p className="font-medium text-gray-900">Team Members</p>
                   <p className="text-gray-600">
-                    {project.teamMembers.length} members
+                    {project.teamMembers ? project.teamMembers.length : 0}{" "}
+                    members
                   </p>
                 </div>
               </div>
@@ -290,7 +341,7 @@ export default function ProjectDetailPage() {
             </div>
 
             {/* tags */}
-            {project.tags.length > 0 && (
+            {project.tags && project.tags.length > 0 && (
               <div className="mt-4">
                 <div className="flex items-center space-x-2">
                   <Tag className="h-4 w-4 text-gray-400" />
@@ -330,7 +381,7 @@ export default function ProjectDetailPage() {
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
               </div>
-            ) : tasks.length === 0 ? (
+            ) : tasksArray.length === 0 ? (
               <div className="text-center py-12">
                 <h3 className="mt-2 text-sm font-medium text-gray-900">
                   No tasks yet
@@ -350,7 +401,7 @@ export default function ProjectDetailPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {tasks.map((task) => (
+                {tasksArray.map((task) => (
                   <div
                     key={task._id}
                     className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
@@ -387,12 +438,9 @@ export default function ProjectDetailPage() {
                           )}
                         </div>
                       </div>
-                      <Link
-                        href={`/dashboard/tasks/${task._id}`}
-                        className="text-sm text-indigo-600 hover:text-indigo-900"
-                      >
-                        View →
-                      </Link>
+                      <span className="text-sm text-gray-400">
+                        #{task._id.slice(-6)}
+                      </span>
                     </div>
                   </div>
                 ))}

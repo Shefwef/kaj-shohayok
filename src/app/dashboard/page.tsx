@@ -18,7 +18,6 @@ export default function DashboardPage() {
               Welcome back! Here's what's happening with your projects.
             </p>
           </div>
-          <UserButton afterSignOutUrl="/" />
         </div>
 
         {/* quick actions */}
