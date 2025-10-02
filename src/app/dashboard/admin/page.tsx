@@ -10,8 +10,11 @@ import {
   Trash2,
   Eye,
   Search,
+  AlertTriangle,
 } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -58,12 +61,16 @@ const AVAILABLE_PERMISSIONS = [
 ];
 
 export default function AdminDashboard() {
+  const { userId, isLoaded } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("users");
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [checking, setChecking] = useState(true);
 
   // dialog states
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
@@ -131,11 +138,54 @@ export default function AdminDashboard() {
     }
   };
 
+  // Check admin permissions
+  const checkAdminAccess = async () => {
+    if (!userId) {
+      router.push('/sign-in');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/users/me');
+      if (response.ok) {
+        const result = await response.json();
+        const userRole = result.data?.role?.name;
+        const hasAdminAccess = userRole === 'admin';
+        
+        setIsAdmin(hasAdminAccess);
+        
+        if (!hasAdminAccess) {
+          // Redirect non-admin users
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 3000);
+        }
+      } else {
+        setIsAdmin(false);
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+      setIsAdmin(false);
+      router.push('/dashboard');
+    } finally {
+      setChecking(false);
+    }
+  };
+
   useEffect(() => {
-    fetchUsers();
-    fetchRoles();
-    fetchOrganizations();
-  }, []);
+    if (isLoaded) {
+      checkAdminAccess();
+    }
+  }, [isLoaded, userId]);
+
+  useEffect(() => {
+    if (isAdmin === true) {
+      fetchUsers();
+      fetchRoles();
+      fetchOrganizations();
+    }
+  }, [isAdmin]);
 
   // role management functions
   const handleCreateRole = async () => {
@@ -339,6 +389,48 @@ export default function AdminDashboard() {
       org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       org.slug.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Show loading state while checking permissions
+  if (!isLoaded || checking) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Checking permissions...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show access denied for non-admin users
+  if (isAdmin === false) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-[400px] flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <AlertTriangle className="mx-auto h-16 w-16 text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Access Denied
+            </h2>
+            <p className="text-gray-600 mb-4">
+              You don't have admin privileges to access this page. Only users with admin role can access the admin dashboard.
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              Redirecting you back to the dashboard in 3 seconds...
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
