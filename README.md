@@ -1,165 +1,369 @@
-# Kaj Shohayok — Enterprise Task Management Platform
+<div align="center">
 
-> **Live Demo:** _Deploy to Vercel first (see deployment guide below), then add your link here._
-> **Full Docs:** [PROJECT_DOCS.md](./PROJECT_DOCS.md) | **Postman Collection:** [KajShohayok_API_Collection.json](./KajShohayok_API_Collection.json)
+# Kaj Shohayok
+### Enterprise Task Management Platform
 
-A production-grade, full-stack task management platform built with **Next.js 15**, **TypeScript**, and a **dual-database architecture** (PostgreSQL + MongoDB + Redis). Features AI-powered task assistance via **Google Gemini 2.0 Flash**, a **drag-and-drop Kanban board**, **real-time updates** via Server-Sent Events, and a **CI/CD pipeline** with GitHub Actions.
+**"Kaj Shohayok" means "Work Helper" in Bengali**
+
+[![CI/CD Pipeline](https://github.com/Shefwef/kaj-shohayok/actions/workflows/ci.yml/badge.svg)](https://github.com/Shefwef/kaj-shohayok/actions)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss)](https://tailwindcss.com)
+
+A full-stack, production-ready task management platform with AI assistance, real-time updates, role-based access control, and a beautiful green/dark UI — built for modern teams.
+
+[Quick Start](#quick-start) · [Architecture](#architecture) · [Features](#features) · [API Reference](#api-reference) · [Deploy](#deploy-to-vercel)
+
+</div>
 
 ---
 
-## Key Features
+## What Is This?
 
-| Category | Features |
-|----------|---------|
-| **Security** | Clerk auth, RBAC (4 roles × 12 permissions), rate limiting, Clerk webhooks |
-| **Architecture** | 3-tier (Repository → Service → API), EventBus, Factory Pattern, DI container |
-| **Databases** | PostgreSQL/Prisma (RBAC data), MongoDB/Mongoose (tasks/projects), Redis (cache/rate-limit) |
-| **AI** | Gemini 2.0 Flash: task breakdown, completion prediction, workload balancing, semantic search |
-| **Real-Time** | Server-Sent Events (SSE) — Vercel-compatible live updates |
-| **Kanban** | @dnd-kit drag-and-drop with Framer Motion animations + optimistic updates |
-| **Analytics** | Recharts — pie, bar, area, line charts + productivity trends |
-| **Dark Mode** | next-themes — system preference + sidebar toggle, fully persisted |
-| **Reporting** | Factory Pattern: CSV/JSON reports + raw data export |
-| **Testing** | Jest unit tests — RBAC matrix, status utilities, Zod validation, EventBus |
-| **CI/CD** | GitHub Actions: type-check → lint → test → build → Vercel deploy |
-| **Docker** | 6-service Compose: PostgreSQL, MongoDB, Redis, Next.js, Adminer, Mongo Express |
+Kaj Shohayok is a complete, enterprise-grade task manager you can run locally or deploy to Vercel in minutes. Think of it as a self-hosted Jira/Linear, but with:
+
+- An **AI assistant** (Gemini 2.0 Flash) that helps you write, break down, and predict your tasks
+- A **Kanban board** with real smooth drag-and-drop
+- **Live updates** — when a teammate moves a card, you see it instantly (no page refresh)
+- **4 roles** — Admin, Manager, Member, Viewer — each with exactly the right permissions
+- **Dark mode** that actually looks good
 
 ---
 
 ## Architecture
 
-```
-src/
-├── app/
-│   ├── api/
-│   │   ├── ai/              ← task-assist, predict-completion, workload, search
-│   │   ├── analytics/       ← dashboard stats
-│   │   ├── events/          ← SSE real-time stream
-│   │   ├── export/          ← raw CSV/JSON data export
-│   │   ├── health/          ← DB + service health check
-│   │   ├── notifications/
-│   │   ├── projects/
-│   │   ├── reports/         ← factory-pattern report generation
-│   │   ├── tasks/[id]/comments & activity
-│   │   └── users/
-│   └── dashboard/
-│       ├── analytics/       ← Recharts visualizations
-│       ├── projects/[id]/   ← Kanban board (dnd-kit)
-│       └── reports/         ← report generator page
-├── components/
-│   ├── ai/                  ← AITaskAssist panel
-│   ├── kanban/              ← KanbanBoard, SortableTaskCard
-│   └── layout/              ← Sidebar (dark mode toggle), Header
-├── lib/
-│   ├── container.ts         ← DI: wires repos → services
-│   ├── EventBus.ts          ← Observer pattern
-│   ├── errors.ts            ← Custom error hierarchy
-│   ├── logger.ts            ← Structured logging
-│   └── permissions.ts       ← RBAC
-├── repositories/            ← TaskRepository, ProjectRepository, AuditRepository
-├── services/                ← TaskService, AuditService, NotificationService, AIService, ReportService
-└── tests/unit/              ← Jest unit tests
+The app is split into three clear layers — each one only talks to the layer directly below it. This means you can swap the database, the AI provider, or add new features without breaking everything else.
+
+```mermaid
+graph TD
+    subgraph Client["Browser / Client"]
+        UI["Next.js 15 UI\n(React 19 + Tailwind)"]
+        Chatbot["KS Assistant\n(AI Chatbot)"]
+        Kanban["Kanban Board\n(@dnd-kit)"]
+        Charts["Analytics\n(Recharts)"]
+    end
+
+    subgraph API["API Layer (Next.js App Router)"]
+        Routes["Route Handlers\n/api/*"]
+        Auth["Clerk Auth\nMiddleware"]
+        RateLimit["Rate Limiter\n(In-Memory)"]
+    end
+
+    subgraph Services["Service Layer (Business Logic)"]
+        TaskSvc["TaskService"]
+        AuditSvc["AuditService"]
+        NotifSvc["NotificationService"]
+        AISvc["AIService"]
+        ReportSvc["ReportService"]
+        EventBus["EventBus\n(Observer Pattern)"]
+    end
+
+    subgraph Repos["Repository Layer (Data Access)"]
+        TaskRepo["TaskRepository"]
+        ProjectRepo["ProjectRepository"]
+        AuditRepo["AuditRepository"]
+    end
+
+    subgraph Data["Data Layer"]
+        PG[("PostgreSQL\nUsers · Roles · Orgs")]
+        Mongo[("MongoDB\nTasks · Projects · Comments")]
+        Redis[("Redis\nCache · Rate Limits")]
+    end
+
+    subgraph External["External Services"]
+        Clerk["Clerk\nAuthentication"]
+        Gemini["Gemini 2.0 Flash\nAI API"]
+        SSE["Server-Sent Events\nReal-Time Stream"]
+    end
+
+    Client --> API
+    API --> Auth --> Clerk
+    API --> RateLimit --> Redis
+    API --> Services
+    Services --> Repos
+    Repos --> PG
+    Repos --> Mongo
+    AISvc --> Gemini
+    NotifSvc --> SSE --> Client
+    EventBus -.->|publishes| NotifSvc
+    EventBus -.->|publishes| AuditSvc
 ```
 
 ---
 
-## Required Environment Variables
+## How Data Flows
 
-Copy `.env.example` to `.env.local` and fill in your values:
+Here's the exact path a request takes from the moment you click "Create Task" to the moment it appears on everyone's screen:
 
-```bash
-cp .env.example .env.local
+```mermaid
+sequenceDiagram
+    participant User as You (Browser)
+    participant MW as Clerk Middleware
+    participant API as /api/tasks
+    participant Svc as TaskService
+    participant Repo as TaskRepository
+    participant DB as MongoDB
+    participant Bus as EventBus
+    participant SSE as SSE Stream
+    participant Other as Other Users
+
+    User->>MW: POST /api/tasks { title, priority, ... }
+    MW->>MW: Verify Clerk session token
+    MW->>API: Authenticated request + userId
+
+    API->>Svc: createTask(data, actorId)
+    Svc->>Svc: Validate permissions (RBAC check)
+    Svc->>Repo: insert(taskData)
+    Repo->>DB: db.tasks.insertOne(...)
+    DB-->>Repo: saved task document
+    Repo-->>Svc: Task object
+
+    Svc->>Bus: publish("task:created", task)
+    Bus->>Bus: fan out to all subscribers
+    Bus-->>SSE: notify(assigneeId, task)
+    Bus-->>DB: AuditService.log(action, actor)
+
+    SSE-->>Other: event: task_assigned\ndata: {...}
+    Other->>Other: UI updates live (no refresh)
+
+    Svc-->>API: Task
+    API-->>User: 201 { success: true, data: task }
+    User->>User: Optimistic UI update on Kanban
 ```
 
-| Variable | Required | Source |
-|----------|----------|--------|
-| `DATABASE_URL` | ✅ | [Neon](https://neon.tech) free tier or local PostgreSQL |
-| `MONGODB_URI` | ✅ | [MongoDB Atlas](https://mongodb.com/atlas) M0 free or local |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | [Clerk Dashboard](https://dashboard.clerk.com) → API Keys |
-| `CLERK_SECRET_KEY` | ✅ | Clerk Dashboard → API Keys |
-| `CLERK_WEBHOOK_SECRET` | ✅ | Clerk Dashboard → Webhooks |
-| `GEMINI_API_KEY` | optional | [Google AI Studio](https://aistudio.google.com/app/apikey) — AI degrades to mocks without it |
-| `UPSTASH_REDIS_REST_URL` | optional | [Upstash](https://upstash.com) — falls back to in-memory |
-| `UPSTASH_REDIS_REST_TOKEN` | optional | Upstash |
+---
 
-For CI/CD, also add **GitHub Secrets**: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+## Auth & Role Flow
+
+```mermaid
+flowchart LR
+    A[User Signs Up\nvia Clerk] --> B{Clerk Webhook}
+    B --> C[/api/webhooks/clerk]
+    C --> D[Create User in PostgreSQL\nwith default Member role]
+
+    E[User Logs In] --> F[Clerk Session Token]
+    F --> G[Every API Request]
+    G --> H{Check Role\nin PostgreSQL}
+    H -->|Admin| I[Full Access]
+    H -->|Manager| J[Projects + Team]
+    H -->|Member| K[Tasks + Read]
+    H -->|Viewer| L[Read Only]
+
+    M[Admin Panel] --> N[Change User Role]
+    N --> O[PostgreSQL UPDATE]
+    O --> P[Takes effect immediately\non next request]
+```
+
+---
+
+## Features
+
+### Kanban Board
+Drag tasks between columns with smooth animations. Optimistic updates mean the card moves instantly — the API call happens in the background.
+
+```
+┌─────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐
+│    TODO     │  │ IN PROGRESS  │  │    REVIEW    │  │    DONE     │
+├─────────────┤  ├──────────────┤  ├──────────────┤  ├─────────────┤
+│ 📋 Task A  │  │ 🔨 Task B   │  │ 👀 Task C   │  │ ✅ Task D  │
+│ High · 2d  │──▶ Medium · 1d │  │ Low · done  │  │ Completed  │
+├─────────────┤  ├──────────────┤  └──────────────┘  └─────────────┘
+│ 📋 Task E  │  │              │
+│ Low · 5d   │  └──────────────┘
+└─────────────┘
+        drag and drop any card to any column ↑
+```
+
+### AI Assistant (KS Assistant)
+The chatbot in the bottom-right corner knows everything about the app. When you have a Gemini API key, it uses Gemini 2.0 Flash with a comprehensive system prompt. Without a key, it falls back to smart keyword-based responses — the app never breaks.
+
+**What the AI can do:**
+- Break down complex tasks into sub-tasks automatically
+- Predict how long a task will take based on similar past work
+- Analyze team workload and flag imbalances
+- Answer any question about using the app
+
+### Role-Based Access Control
+
+| Permission | Admin | Manager | Member | Viewer |
+|------------|:-----:|:-------:|:------:|:------:|
+| Manage users & roles | ✅ | — | — | — |
+| Create/delete projects | ✅ | ✅ | — | — |
+| Create/update tasks | ✅ | ✅ | ✅ | — |
+| Assign tasks to others | ✅ | ✅ | — | — |
+| View analytics | ✅ | ✅ | ✅ | ✅ |
+| Export reports | ✅ | ✅ | ✅ | — |
+| Manage team members | ✅ | ✅ | — | — |
+
+### Real-Time Updates (SSE)
+When any user creates, moves, or completes a task, all other users with that project open see the change live. Built with Server-Sent Events — compatible with Vercel's serverless platform (no WebSocket server needed).
+
+### Analytics Dashboard
+Six chart types powered by Recharts:
+- **Pie chart** — task status distribution
+- **Bar chart** — tasks per project
+- **Area chart** — completion trend over 7 days
+- **Line chart** — productivity score
+- **Progress bars** — per-project progress
+- **Workload heatmap** — team member load
+
+---
+
+## Tech Stack
+
+| What | Technology | Why |
+|------|-----------|-----|
+| Framework | Next.js 15 App Router | Full-stack, file-based routing, server components |
+| Language | TypeScript 5 | Type safety from DB to UI |
+| Styling | Tailwind CSS 4 | Utility-first, dark mode built in |
+| UI | Lucide React, Framer Motion | Beautiful icons + smooth animations |
+| Auth | Clerk | Handles email, OAuth, sessions, webhooks |
+| RBAC DB | PostgreSQL + Prisma | Transactional role changes, relational integrity |
+| Content DB | MongoDB + Mongoose | Flexible schemas for tasks, comments, activity |
+| Cache | Redis (Upstash) | Rate limiting, optional response caching |
+| AI | Gemini 2.0 Flash | Fast, free-tier available, multimodal |
+| Kanban DnD | @dnd-kit | Accessible drag-and-drop, mobile-friendly |
+| Charts | Recharts | Declarative, composable, responsive |
+| Testing | Jest + Testing Library | Unit tests for RBAC, validation, services |
+| CI/CD | GitHub Actions → Vercel | Type check → lint → test → build → deploy |
+| DevOps | Docker Compose | 6-service local stack |
 
 ---
 
 ## Quick Start
 
-### Option A — Local (npm)
+### Option A — Local (5 minutes)
 
 ```bash
-# 1. Clone and install
+# 1. Clone
 git clone https://github.com/Shefwef/kaj-shohayok.git
 cd kaj-shohayok
 npm install
 
-# 2. Configure environment
-cp .env.example .env.local
-# Edit .env.local — add DATABASE_URL, MONGODB_URI, and Clerk keys
+# 2. Set up environment
+cp .env.example .env
+# Fill in your values (see Environment Variables below)
 
-# 3. Run database migrations
+# 3. Run database migrations (PostgreSQL)
 npx prisma migrate dev
 
-# 4. Start development server
+# 4. Start
 npm run dev
-# Open http://localhost:3000
 ```
 
-### Option B — Docker (all 6 services)
+Open [http://localhost:3000](http://localhost:3000)
+
+### Option B — Docker (everything in one command)
 
 ```bash
 docker compose up -d
-# App:              http://localhost:3000
-# PostgreSQL admin: http://localhost:8080
-# MongoDB admin:    http://localhost:8081
+```
+
+| Service | URL |
+|---------|-----|
+| App | http://localhost:3000 |
+| PostgreSQL admin (Adminer) | http://localhost:8080 |
+| MongoDB admin (Mongo Express) | http://localhost:8081 |
+
+---
+
+## Environment Variables
+
+Create a `.env` file (Prisma reads this, not `.env.local`):
+
+```bash
+# PostgreSQL — local or Neon free tier
+DATABASE_URL="postgresql://user:password@localhost:5432/kaj_shohayok"
+
+# MongoDB — local or Atlas M0 free tier
+MONGODB_URI="mongodb+srv://user:password@cluster.mongodb.net/kaj_shohayok"
+
+# Clerk — get from dashboard.clerk.com → API Keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
+CLERK_SECRET_KEY="sk_test_..."
+CLERK_WEBHOOK_SECRET="whsec_..."
+
+# Clerk redirect URLs
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+
+# Gemini AI — optional, get from aistudio.google.com/app/apikey
+# Without this the AI features use smart fallback responses
+GEMINI_API_KEY="AIza..."
+
+# Upstash Redis — optional, falls back to in-memory
+UPSTASH_REDIS_REST_URL="https://..."
+UPSTASH_REDIS_REST_TOKEN="..."
 ```
 
 ---
 
-## Deployment to Vercel (Free)
+## Deploy to Vercel
 
-### Free-tier cloud stack
+### Free Cloud Stack
 
-| Service | Provider | Notes |
-|---------|----------|-------|
-| App | Vercel | Auto-detected Next.js |
-| PostgreSQL | [Neon](https://neon.tech) | Free 0.5 GB |
-| MongoDB | [Atlas M0](https://mongodb.com/atlas) | Free 512 MB |
-| Redis | [Upstash](https://upstash.com) | Free 10K commands/day |
-| Auth | Clerk | Free 10K MAU |
-| AI | Gemini 2.0 Flash | Free quota |
+| Service | Provider | Free Tier |
+|---------|----------|-----------|
+| App hosting | [Vercel](https://vercel.com) | Unlimited hobby projects |
+| PostgreSQL | [Neon](https://neon.tech) | 0.5 GB storage |
+| MongoDB | [MongoDB Atlas](https://mongodb.com/atlas) | 512 MB storage |
+| Redis | [Upstash](https://upstash.com) | 10,000 requests/day |
+| Auth | [Clerk](https://clerk.com) | 10,000 MAU |
+| AI | [Gemini 2.0 Flash](https://aistudio.google.com) | 1M tokens/day |
 
 ### Steps
 
+**1.** Push your repo to GitHub  
+**2.** Go to [vercel.com](https://vercel.com) → New Project → Import your repo  
+**3.** Add all environment variables in the Vercel dashboard  
+**4.** Click Deploy  
+**5.** After deploy, run the DB migration once:
+
 ```bash
-# 1. Push repo to GitHub
-git push origin main
-
-# 2. Import at vercel.com/new → add all env vars from .env.example
-# 3. Deploy
-
-# 4. Run migrations against Neon (one-time)
 npx vercel env pull .env.local
 npx prisma migrate deploy
 ```
 
+### Automatic deploys via CI/CD
+
+Every push to `main` runs this pipeline automatically:
+
+```
+push to main
+    ↓
+Type Check (tsc)
+    ↓
+Lint (ESLint)
+    ↓
+Unit Tests (Jest)
+    ↓
+Build (next build)
+    ↓
+Deploy to Vercel
+```
+
+Add these GitHub Secrets to enable the full pipeline:
+- `VERCEL_TOKEN` — from Vercel account settings
+- `VERCEL_ORG_ID` — from Vercel project settings
+- `VERCEL_PROJECT_ID` — from Vercel project settings
+- All env vars from the table above
+
 ---
 
-## Available Scripts
+## Getting Admin Access
 
-```bash
-npm run dev            # Development (Turbopack)
-npm run build          # Production build
-npm run start          # Production server
-npm run lint           # ESLint
-npm run type-check     # TypeScript (no emit)
-npm test               # Jest unit tests
-npm run test:coverage  # Coverage report
-npm run test:watch     # Watch mode
+New users are assigned the **Member** role by default. To grant yourself Admin:
+
+```sql
+-- Run this in pgAdmin or psql
+UPDATE "User"
+SET "roleId" = (SELECT id FROM "Role" WHERE name = 'admin')
+WHERE "clerkId" = 'your_clerk_user_id';
 ```
+
+Find your Clerk user ID: go to [dashboard.clerk.com](https://dashboard.clerk.com) → Users → click your account.
 
 ---
 
@@ -167,85 +371,140 @@ npm run test:watch     # Watch mode
 
 ```
 # System
-GET  /api/health
+GET  /api/health                      Health check (DB + services)
 
 # Projects
-GET  /api/projects          POST /api/projects
-GET  /api/projects/:id      PUT  /api/projects/:id     DELETE /api/projects/:id
+GET  /api/projects                    List accessible projects
+POST /api/projects                    Create project
+GET  /api/projects/:id                Get project + kanban data
+PUT  /api/projects/:id                Update project
+DELETE /api/projects/:id              Delete project
 
 # Tasks
-GET  /api/tasks             POST /api/tasks
-GET  /api/tasks/:id         PUT  /api/tasks/:id         DELETE /api/tasks/:id
-GET  /api/tasks/:id/comments    POST /api/tasks/:id/comments
-GET  /api/tasks/:id/activity
+GET  /api/tasks                       List tasks (with filters)
+POST /api/tasks                       Create task
+GET  /api/tasks/:id                   Get task detail
+PUT  /api/tasks/:id                   Update task (status, priority, etc.)
+DELETE /api/tasks/:id                 Delete task
+GET  /api/tasks/:id/comments          Get task comments
+POST /api/tasks/:id/comments          Add comment
+GET  /api/tasks/:id/activity          Activity log
 
-# AI
-POST /api/ai/task-assist          ← AI task breakdown
-POST /api/ai/predict-completion   ← estimated completion time
-GET  /api/ai/workload             ← team imbalance analysis
-POST /api/ai/search               ← semantic task search
+# AI Features
+POST /api/ai/task-assist              Break down a task into sub-tasks
+POST /api/ai/predict-completion       Estimate completion time
+GET  /api/ai/workload                 Analyze team workload balance
+POST /api/ai/search                   Semantic task search
+POST /api/chat                        KS Assistant chatbot
 
 # Analytics & Reports
-GET  /api/analytics
-GET  /api/reports?format=csv&type=summary
-GET  /api/export?type=tasks&format=csv
+GET  /api/analytics                   Dashboard stats + charts data
+GET  /api/reports?format=csv          Generate report (csv/json)
+GET  /api/export?type=tasks&format=csv  Raw data export
 
 # Real-Time
-GET  /api/events                  ← SSE stream
-GET  /api/notifications           PATCH /api/notifications
+GET  /api/events                      SSE stream (connect once, receive updates)
+GET  /api/notifications               List unread notifications
+PATCH /api/notifications              Mark notifications as read
+
+# Users & Auth
+GET  /api/users/me                    Current user profile + role
+POST /api/sync-users                  Sync Clerk users to PostgreSQL
 ```
 
 Full Postman collection: [KajShohayok_API_Collection.json](./KajShohayok_API_Collection.json)
 
 ---
 
-## RBAC Roles
+## Project Structure
 
-| Role | Permissions |
-|------|------------|
-| **Admin** | All 12 permissions |
-| **Manager** | Projects (create/update), tasks (create/update/assign), users, analytics |
-| **Member** | Tasks (create/update), read projects, analytics |
-| **Viewer** | Read-only: projects, tasks, analytics |
+```
+kaj-shohayok/
+├── src/
+│   ├── app/
+│   │   ├── api/                    All API routes
+│   │   │   ├── ai/                 AI endpoints (assist, predict, workload, search)
+│   │   │   ├── analytics/          Dashboard data
+│   │   │   ├── chat/               KS Assistant chatbot
+│   │   │   ├── events/             SSE real-time stream
+│   │   │   ├── export/             Raw CSV/JSON export
+│   │   │   ├── projects/[id]/      Project CRUD + kanban
+│   │   │   ├── tasks/[id]/         Task CRUD + comments + activity
+│   │   │   └── webhooks/clerk/     Clerk user sync webhook
+│   │   ├── dashboard/
+│   │   │   ├── analytics/          Charts page
+│   │   │   ├── projects/[id]/      Kanban board page
+│   │   │   ├── reports/            Report generator
+│   │   │   ├── tasks/              Task list + filters
+│   │   │   └── admin/              User & role management
+│   │   └── page.tsx                Landing page
+│   │
+│   ├── components/
+│   │   ├── ai/                     AITaskAssist panel
+│   │   ├── chat/                   KS Assistant chatbot (floating)
+│   │   ├── dashboard/              Stats, QuickActions, RecentActivity
+│   │   ├── kanban/                 KanbanBoard + SortableTaskCard
+│   │   └── layout/                 Sidebar, Header, DashboardLayout
+│   │
+│   ├── lib/
+│   │   ├── container.ts            Dependency injection wiring
+│   │   ├── EventBus.ts             Observer pattern for side effects
+│   │   ├── errors.ts               Custom error hierarchy
+│   │   ├── permissions.ts          RBAC definitions + checks
+│   │   └── validations/            Zod schemas for all inputs
+│   │
+│   ├── repositories/               Data access — one per entity
+│   │   ├── TaskRepository.ts
+│   │   ├── ProjectRepository.ts
+│   │   └── AuditRepository.ts
+│   │
+│   └── services/                   Business logic — orchestrates repos
+│       ├── TaskService.ts
+│       ├── AIService.ts
+│       ├── AuditService.ts
+│       ├── NotificationService.ts
+│       └── ReportService.ts
+│
+├── prisma/
+│   ├── schema.prisma               PostgreSQL schema (Users, Roles, Orgs)
+│   └── migrations/                 Migration history
+│
+├── tests/unit/                     Jest tests (RBAC, validation, EventBus)
+├── docker-compose.yml              6-service local stack
+└── .github/workflows/ci.yml        GitHub Actions pipeline
+```
 
 ---
 
-## Tech Stack
+## Available Scripts
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 15, React 19, TypeScript |
-| Styling | Tailwind CSS 4, Framer Motion |
-| UI | @dnd-kit (Kanban), Recharts (charts), next-themes (dark mode) |
-| Auth | Clerk |
-| ORM/ODM | Prisma (PostgreSQL), Mongoose (MongoDB) |
-| Validation | Zod |
-| State | TanStack Query |
-| AI | Google Gemini 2.0 Flash (REST) |
-| Real-Time | Server-Sent Events |
-| Testing | Jest, @testing-library/react |
-| CI/CD | GitHub Actions → Vercel |
-| DevOps | Docker Compose (6 services) |
+```bash
+npm run dev            # Start dev server (Turbopack — fast HMR)
+npm run build          # Production build
+npm run start          # Production server
+npm run lint           # ESLint
+npm run type-check     # TypeScript check (no output files)
+npm test               # Jest unit tests
+npm run test:coverage  # Coverage report
+npm run test:watch     # Watch mode for TDD
+```
 
 ---
 
-## QA Testing Guide
+## Design Decisions
 
-After setup, follow the 16-step QA checklist in [PROJECT_DOCS.md § 17](./PROJECT_DOCS.md#17-qa-testing-guide).
+**Why two databases?**
+PostgreSQL handles RBAC because role changes need ACID transactions — you don't want a race condition that accidentally gives someone admin. MongoDB handles tasks and projects because they benefit from flexible schemas (different task types have different fields) and MongoDB's aggregation pipeline makes analytics queries simpler.
 
-Covers: health check, auth flow, projects CRUD, Kanban drag-and-drop, AI features, analytics, reports, dark mode, SSE, rate limiting, RBAC enforcement, and admin panel.
+**Why SSE instead of WebSockets?**
+Vercel's serverless functions don't support persistent WebSocket connections. SSE works perfectly for one-way server-to-client updates and is natively supported by browsers. For a task management tool where "someone updated a card" is the main real-time event, SSE is more than enough.
 
----
+**Why Gemini 2.0 Flash?**
+It's fast, cheap, has a generous free tier (1M tokens/day), and supports function calling and multimodal inputs — which means future features like "extract tasks from this screenshot" are possible without changing the AI provider.
 
-## Characteristics
-
-
-**The dual-database design** (PostgreSQL for RBAC + MongoDB for tasks) is a deliberate architectural tradeoff. Role changes need transactional guarantees — PostgreSQL delivers that. Tasks and projects benefit from MongoDB's flexible schemas and aggregation pipeline for analytics.
-
-**The clean architecture** (Repository → Service → API) means I can swap the database ORM, the AI provider, or add new side effects without touching unrelated code. The EventBus decouples notifications from business logic — adding a Slack integration would be one new subscriber, zero service changes.
-
-**The AI layer degrades gracefully** — every endpoint has a deterministic fallback. The app is fully functional without a Gemini API key.
+**Why the Repository → Service → API pattern?**
+Each layer has one job. Repositories only care about reading/writing data. Services only care about business rules. API routes only care about HTTP. Adding a new feature (say, Slack notifications) means adding one new subscriber to the EventBus — zero changes to the service layer.
 
 ---
 
-*Built by [Shefwef](https://github.com/Shefwef) · Next.js 15 + Google Gemini 2.0 Flash*
+*Built by [Shefwef](https://github.com/Shefwef) · Next.js 15 · Gemini 2.0 Flash · PostgreSQL + MongoDB*
