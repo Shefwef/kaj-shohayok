@@ -4,6 +4,8 @@ import Project from "@/models/Project";
 import Task from "@/models/Task";
 import { createApiResponse } from "@/lib/utils";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     await connectMongoDB();

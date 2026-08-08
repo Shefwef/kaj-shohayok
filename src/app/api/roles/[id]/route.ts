@@ -6,6 +6,8 @@ import { withRateLimit } from "@/lib/rate-limit";
 import { updateRoleSchema } from "@/lib/validations/auth";
 import { hasPermission } from "@/lib/permissions";
 
+export const dynamic = 'force-dynamic';
+
 // getting role by id
 export async function GET(
   request: NextRequest,

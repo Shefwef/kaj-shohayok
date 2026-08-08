@@ -6,6 +6,8 @@ import { createApiResponse } from "@/lib/utils";
 import { withRateLimit } from "@/lib/rate-limit";
 import { createProjectSchema } from "@/lib/validations/project";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const rateCheck = await withRateLimit(request);

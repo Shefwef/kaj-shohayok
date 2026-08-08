@@ -4,6 +4,8 @@ import connectMongoDB from "@/lib/db/mongodb";
 import Project from "@/models/Project";
 import Task from "@/models/Task";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Check authentication

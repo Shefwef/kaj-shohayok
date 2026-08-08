@@ -8,6 +8,8 @@ import { withRateLimit } from "@/lib/rate-limit";
 import { createTaskSchema } from "@/lib/validations/task";
 import mongoose from "mongoose";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const rateCheck = await withRateLimit(request);

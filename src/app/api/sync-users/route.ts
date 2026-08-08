@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db/postgres";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log("🔄 Starting user sync from Clerk to PostgreSQL...");
