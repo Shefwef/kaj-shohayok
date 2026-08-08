@@ -3,30 +3,23 @@
 # Kaj Shohayok
 ### Enterprise Task Management Platform
 
-**"Kaj Shohayok" means "Work Helper" in Bengali**
-
 [![CI/CD Pipeline](https://github.com/Shefwef/kaj-shohayok/actions/workflows/ci.yml/badge.svg)](https://github.com/Shefwef/kaj-shohayok/actions)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss)](https://tailwindcss.com)
 
-A full-stack, production-ready task management platform with AI assistance, real-time updates, role-based access control, and a beautiful green/dark UI — built for modern teams.
+Kaj Shohayok is a production-ready, full-stack task management platform you can self-host or deploy to Vercel in minutes. It combines the project visibility of Jira with the simplicity of Linear — powered by AI, real-time collaboration, and a clean green-and-dark UI built for modern engineering teams.
+
+- **AI-powered** — Gemini 2.0 Flash breaks down tasks, predicts completion, and balances team workload. Voice-to-text lets you create tasks hands-free.
+- **Kanban boards** — drag-and-drop task management with instant optimistic updates and smooth animations.
+- **Live updates** — Server-Sent Events push changes to every connected user in real time, no page refresh needed.
+- **Role-based access** — four roles (Admin, Manager, Member, Viewer) with 12 granular permissions, enforced at every API endpoint.
+- **Dual-database architecture** — PostgreSQL for transactional RBAC data, MongoDB for flexible task and project content.
+- **Dark mode** — system-aware theme with persistent sidebar toggle.
 
 [Quick Start](#quick-start) · [Architecture](#architecture) · [Features](#features) · [API Reference](#api-reference) · [Deploy](#deploy-to-vercel)
 
 </div>
-
----
-
-## What Is This?
-
-Kaj Shohayok is a complete, enterprise-grade task manager you can run locally or deploy to Vercel in minutes. Think of it as a self-hosted Jira/Linear, but with:
-
-- An **AI assistant** (Gemini 2.0 Flash) that helps you write, break down, and predict your tasks
-- A **Kanban board** with real smooth drag-and-drop
-- **Live updates** — when a teammate moves a card, you see it instantly (no page refresh)
-- **4 roles** — Admin, Manager, Member, Viewer — each with exactly the right permissions
-- **Dark mode** that actually looks good
 
 ---
 
