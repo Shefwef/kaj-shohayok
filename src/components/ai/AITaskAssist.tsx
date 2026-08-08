@@ -81,7 +81,7 @@ export default function AITaskAssist({ taskTitle, description, projectContext }:
       <button
         onClick={handleFetch}
         disabled={loading}
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
       >
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -100,11 +100,11 @@ export default function AITaskAssist({ taskTitle, description, projectContext }:
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-3 border border-indigo-200 dark:border-indigo-800 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 p-4">
+            <div className="mt-3 border border-emerald-200 dark:border-emerald-800 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-600" />
-                  <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                     AI Analysis
                   </span>
                 </div>
@@ -118,7 +118,7 @@ export default function AITaskAssist({ taskTitle, description, projectContext }:
 
               {loading && (
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 py-4">
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                  <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
                   Analyzing task with Gemini AI...
                 </div>
               )}
@@ -166,7 +166,7 @@ export default function AITaskAssist({ taskTitle, description, projectContext }:
                       className="flex items-center gap-1 text-xs font-semibold text-gray-700 dark:text-gray-300 w-full"
                       onClick={() => setShowSubtasks((s) => !s)}
                     >
-                      <CheckSquare className="h-3.5 w-3.5 text-indigo-500" />
+                      <CheckSquare className="h-3.5 w-3.5 text-emerald-500" />
                       Suggested Subtasks ({result.subtasks.length})
                       {showSubtasks ? (
                         <ChevronUp className="h-3.5 w-3.5 ml-auto" />

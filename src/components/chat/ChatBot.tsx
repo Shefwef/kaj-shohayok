@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Loader2, Mic, MicOff } from "lucide-react";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -21,6 +22,13 @@ export default function ChatBot() {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { listening, isSupported: voiceSupported, toggle: toggleVoice } = useVoiceInput({
+    onResult: (text) => {
+      setInput((prev) => (prev ? prev + " " + text : text));
+      inputRef.current?.focus();
+    },
+  });
 
   useEffect(() => {
     if (open) {
@@ -149,6 +157,25 @@ export default function ChatBot() {
                 placeholder="Ask me anything…"
                 className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none min-w-0"
               />
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onClick={toggleVoice}
+                  title={listening ? "Stop listening" : "Speak your question"}
+                  className={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all",
+                    listening
+                      ? "bg-red-500 text-white animate-pulse"
+                      : "text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  )}
+                >
+                  {listening ? (
+                    <MicOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Mic className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              )}
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || loading}

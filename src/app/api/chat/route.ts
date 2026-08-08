@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bm25Search } from "@/lib/bm25";
+import { knowledgeIndex } from "@/lib/knowledge-base";
 
 export const dynamic = 'force-dynamic';
 
@@ -47,19 +49,22 @@ export async function POST(request: NextRequest) {
 
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // Fallback responses when no API key
+    // BM25-powered fallback when no API key is configured
     if (!apiKey || apiKey.includes("XXXX")) {
-      const lower = message.toLowerCase();
-      let reply = "I'm the Kaj Shohayok assistant! I can help you navigate the app. Try asking about projects, tasks, the Kanban board, roles, or analytics.";
+      const results = bm25Search(knowledgeIndex, message, 2);
 
-      if (lower.includes("project")) reply = "To create a project: go to **Projects** in the sidebar → click **New Project** → fill in the name, description, priority, and dates. Each project gets its own Kanban board!";
-      else if (lower.includes("task")) reply = "To create a task: go to **Tasks** → **New Task**, or use the **Add Task** button inside any project. You can set priority, due date, assignee, and description.";
-      else if (lower.includes("kanban") || lower.includes("board")) reply = "Open any project and you'll see the Kanban board with columns: **Todo → In Progress → Review → Done**. Drag and drop tasks between columns!";
-      else if (lower.includes("admin")) reply = "The **Admin** panel (sidebar) lets you manage users and roles. You need the Admin role to access it. New users get Member role by default — an Admin must upgrade you.";
-      else if (lower.includes("dark") || lower.includes("mode")) reply = "Toggle dark mode using the **Moon/Sun icon** at the bottom of the left sidebar. The theme saves automatically.";
-      else if (lower.includes("analytic") || lower.includes("report")) reply = "**Analytics** shows charts for project status, task distribution, and productivity trends. **Reports** lets you download CSV or JSON exports of your data.";
-      else if (lower.includes("role") || lower.includes("permission")) reply = "There are 4 roles: **Admin** (full access), **Manager** (projects + team), **Member** (tasks + read), **Viewer** (read-only). Admins assign roles in the Admin panel.";
-      else if (lower.includes("ai")) reply = "AI features include: task breakdown suggestions, completion time prediction, workload analysis, and semantic task search. Look for the **AI Suggest** button when creating tasks.";
+      let reply: string;
+      if (results.length > 0) {
+        // Return the best matching document's response
+        reply = results[0].response;
+        // If a second result is significantly relevant, append it
+        if (results.length > 1) {
+          reply += "\n\n---\n\n**Also relevant:** " + results[1].response;
+        }
+      } else {
+        reply =
+          "I'm the **KS Assistant** — your guide for Kaj Shohayok! I can help with projects, tasks, the Kanban board, roles, AI features, analytics, reports, and more. What would you like to know?";
+      }
 
       return NextResponse.json({ reply });
     }

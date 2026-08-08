@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import VoiceButton from "@/components/ui/VoiceButton";
+import AITaskAssist from "@/components/ai/AITaskAssist";
 
 interface Project {
   _id: string;
@@ -156,20 +158,27 @@ function NewTaskPageContent() {
             <div>
               <label
                 htmlFor="title"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Task Title *
               </label>
-              <input
-                type="text"
-                id="title"
-                required
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter task title"
-                suppressHydrationWarning={true}
-              />
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="text"
+                  id="title"
+                  required
+                  value={formData.title}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  placeholder="Enter task title or speak it…"
+                  suppressHydrationWarning={true}
+                />
+                <VoiceButton
+                  onResult={(text) =>
+                    handleInputChange("title", formData.title ? formData.title + " " + text : text)
+                  }
+                />
+              </div>
               {errors.title && (
                 <p className="mt-1 text-sm text-red-600">{errors.title}</p>
               )}
@@ -179,21 +188,43 @@ function NewTaskPageContent() {
             <div>
               <label
                 htmlFor="description"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Description
               </label>
-              <textarea
-                id="description"
-                rows={4}
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Describe the task..."
-              />
+              <div className="mt-1 relative">
+                <textarea
+                  id="description"
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  className="block w-full px-3 py-2 pr-12 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  placeholder="Describe the task… or click the mic to speak"
+                />
+                <div className="absolute top-2 right-2">
+                  <VoiceButton
+                    size="sm"
+                    onResult={(text) =>
+                      handleInputChange(
+                        "description",
+                        formData.description ? formData.description + " " + text : text
+                      )
+                    }
+                  />
+                </div>
+              </div>
             </div>
+
+            {/* AI task assist — appears once title has content */}
+            {formData.title.trim().length > 3 && (
+              <AITaskAssist
+                taskTitle={formData.title}
+                description={formData.description}
+                projectContext={selectedProject?.name}
+              />
+            )}
 
             {/* project selection */}
             <div>

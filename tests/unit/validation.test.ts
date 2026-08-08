@@ -108,9 +108,7 @@ describe("EventBus", () => {
 
   test("subscribes and receives events", async () => {
     const received: unknown[] = [];
-    EventBus.subscribe("test:event", (data: unknown) => {
-      received.push(data);
-    });
+    EventBus.subscribe("test:event", (data: unknown) => { received.push(data); });
     await EventBus.publish("test:event", { id: 1 });
     expect(received).toHaveLength(1);
     expect(received[0]).toEqual({ id: 1 });
@@ -118,15 +116,15 @@ describe("EventBus", () => {
 
   test("multiple subscribers all receive the event", async () => {
     const count = { value: 0 };
-    EventBus.subscribe("multi:event", () => { count.value += 1; });
-    EventBus.subscribe("multi:event", () => { count.value += 1; });
+    EventBus.subscribe("multi:event", () => { count.value += 1; return; });
+    EventBus.subscribe("multi:event", () => { count.value += 1; return; });
     await EventBus.publish("multi:event", {});
     expect(count.value).toBe(2);
   });
 
   test("unsubscribe stops receiving events", async () => {
     const received: unknown[] = [];
-    const handler = (data: unknown) => received.push(data);
+    const handler = (data: unknown) => { received.push(data); };
     EventBus.subscribe("unsub:event", handler);
     EventBus.unsubscribe("unsub:event", handler);
     await EventBus.publish("unsub:event", {});
