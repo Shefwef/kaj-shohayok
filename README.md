@@ -237,9 +237,8 @@ Covers: health check, auth flow, projects CRUD, Kanban drag-and-drop, AI feature
 
 ---
 
-## What I Built and Why
+## Characteristics
 
-I built Kaj Shohayok to explore how to design a task management tool that scales beyond toy examples.
 
 **The dual-database design** (PostgreSQL for RBAC + MongoDB for tasks) is a deliberate architectural tradeoff. Role changes need transactional guarantees — PostgreSQL delivers that. Tasks and projects benefit from MongoDB's flexible schemas and aggregation pipeline for analytics.
 
