@@ -1,27 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
   Users,
   Tag,
-  MoreVertical,
   Plus,
   Clock,
   CheckCircle2,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import Link from "next/link";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import KanbanBoard from "@/components/kanban/KanbanBoard";
 
 interface Task {
   _id: string;
   title: string;
-  description: string;
+  description?: string;
   status: "todo" | "in_progress" | "review" | "done";
   priority: "low" | "medium" | "high" | "critical";
-  assignedTo?: string;
+  assigneeId?: string;
   dueDate?: string;
   createdAt: string;
 }
@@ -30,8 +32,8 @@ interface Project {
   _id: string;
   name: string;
   description: string;
-  status: "planning" | "active" | "on_hold" | "completed" | "cancelled";
-  priority: "low" | "medium" | "high" | "urgent";
+  status: string;
+  priority: string;
   startDate: string;
   endDate?: string;
   progress: number;
@@ -41,152 +43,74 @@ interface Project {
   updatedAt: string;
 }
 
+const STATUS_BADGE: Record<string, string> = {
+  active: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  archived: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+  planning: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+};
+
+const PRIORITY_BADGE: Record<string, string> = {
+  critical: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  high: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  low: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+};
+
 export default function ProjectDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const projectId = Array.isArray(params.id) ? params.id[0] : (params.id as string);
+
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tasksLoading, setTasksLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"kanban" | "list">("kanban");
 
-  useEffect(() => {
-    if (params.id && typeof params.id === "string") {
-      fetchProject();
-      fetchTasks();
-    } else {
-      setError("Invalid project ID");
-      setLoading(false);
-    }
-  }, [params.id]);
-
-  const fetchProject = async () => {
+  const fetchData = useCallback(async () => {
+    if (!projectId) { setError("Invalid project ID"); setLoading(false); return; }
     try {
-      const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
+      const [projRes, tasksRes] = await Promise.all([
+        fetch(`/api/projects/${projectId}`),
+        fetch(`/api/tasks?projectId=${projectId}&limit=100`),
+      ]);
 
-      if (!projectId || typeof projectId !== "string") {
-        setError("Invalid project ID format");
-        return;
+      if (!projRes.ok) { setError(`Project not found (${projRes.status})`); return; }
+      const projData = await projRes.json();
+      if (projData.success) setProject(projData.data);
+
+      if (tasksRes.ok) {
+        const tasksData = await tasksRes.json();
+        if (tasksData.success) {
+          setTasks(tasksData.data?.tasks ?? tasksData.data ?? []);
+        }
       }
-
-      console.log("Fetching project with ID:", projectId);
-      const response = await fetch(`/api/projects/${projectId}`);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP ${response.status}: ${errorText}`);
-        setError(
-          `Failed to fetch project: ${response.status} ${response.statusText}`
-        );
-        return;
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        setProject(result.data);
-      } else {
-        setError(result.error || "Failed to fetch project");
-      }
-    } catch (error) {
-      console.error("Error fetching project:", error);
-      setError("An error occurred while fetching project details");
+    } catch {
+      setError("Failed to load project");
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
 
-  const fetchTasks = async () => {
-    try {
-      const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-      if (!projectId || typeof projectId !== "string") {
-        console.error("Invalid project ID for tasks fetch");
-        setTasks([]);
-        return;
-      }
-
-      console.log("Fetching tasks for project ID:", projectId);
-      const response = await fetch(`/api/tasks?projectId=${projectId}`);
-
-      if (!response.ok) {
-        console.error(
-          `Failed to fetch tasks: ${response.status} ${response.statusText}`
-        );
-        setTasks([]);
-        return;
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Handle nested tasks data structure
-        const tasksData = result.data.tasks || result.data || [];
-        setTasks(Array.isArray(tasksData) ? tasksData : []);
-      } else {
-        console.error("Tasks fetch unsuccessful:", result.error);
-        setTasks([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch tasks:", error);
-      setTasks([]);
-    } finally {
-      setTasksLoading(false);
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "critical":
-        return "text-red-800 bg-red-100";
-      case "high":
-        return "text-orange-800 bg-orange-100";
-      case "medium":
-        return "text-yellow-800 bg-yellow-100";
-      case "low":
-        return "text-green-800 bg-green-100";
-      default:
-        return "text-gray-800 bg-gray-100";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "text-green-800 bg-green-100";
-      case "active":
-        return "text-blue-800 bg-blue-100";
-      case "on_hold":
-        return "text-yellow-800 bg-yellow-100";
-      case "planning":
-        return "text-purple-800 bg-purple-100";
-      case "cancelled":
-        return "text-red-800 bg-red-100";
-      default:
-        return "text-gray-800 bg-gray-100";
-    }
-  };
-
-  const getTaskStatusColor = (status: string) => {
-    switch (status) {
-      case "done":
-        return "text-green-800 bg-green-100";
-      case "in_progress":
-        return "text-blue-800 bg-blue-100";
-      case "review":
-        return "text-yellow-800 bg-yellow-100";
-      case "todo":
-        return "text-gray-800 bg-gray-100";
-      default:
-        return "text-gray-800 bg-gray-100";
-    }
+  const handleTaskMove = async (taskId: string, newStatus: "todo" | "in_progress" | "review" | "done") => {
+    const res = await fetch(`/api/tasks/${taskId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (!res.ok) throw new Error("Failed to update task");
+    setTasks((prev) =>
+      prev.map((t) => (t._id === taskId ? { ...t, status: newStatus } : t))
+    );
   };
 
   if (loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
         </div>
       </DashboardLayout>
     );
@@ -196,257 +120,202 @@ export default function ProjectDetailPage() {
     return (
       <DashboardLayout>
         <div className="text-center py-12">
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
-            Project not found
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {error || "The project you're looking for doesn't exist."}
-          </p>
-          <div className="mt-6">
-            <Link
-              href="/dashboard/projects"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Back to Projects
-            </Link>
-          </div>
+          <p className="text-gray-900 dark:text-white font-medium">Project not found</p>
+          <p className="text-gray-500 mt-1 text-sm">{error}</p>
+          <Link
+            href="/dashboard/projects"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Projects
+          </Link>
         </div>
       </DashboardLayout>
     );
   }
 
-  const tasksArray = Array.isArray(tasks) ? tasks : [];
-  const completedTasks = tasksArray.filter(
-    (task) => task.status === "done"
-  ).length;
-  const totalTasks = tasksArray.length;
-  const taskProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const completedTasks = tasks.filter((t) => t.status === "done").length;
+  const taskProgress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* header */}
-        <div className="mb-6">
-          <Link
-            href="/dashboard/projects"
-            className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Projects
-          </Link>
-        </div>
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Back link */}
+        <Link
+          href="/dashboard/projects"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Projects
+        </Link>
 
-        {/* project overview */}
-        <div className="bg-white shadow rounded-lg mb-6">
-          <div className="px-6 py-5">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {project.name}
-                </h1>
-                <div className="mt-2 flex items-center space-x-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                      project.status
-                    )}`}
-                  >
-                    {project.status}
-                  </span>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
-                      project.priority
-                    )}`}
-                  >
-                    {project.priority} priority
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <button
-                  disabled
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed"
-                  title="Edit functionality coming soon"
-                >
-                  Edit Project
-                </button>
-                <button className="inline-flex items-center p-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                  <MoreVertical className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {project.description && (
-              <p className="mt-4 text-gray-600">{project.description}</p>
-            )}
-
-            {/* project meta info */}
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-gray-400" />
-                <div className="text-sm">
-                  <p className="font-medium text-gray-900">Start Date</p>
-                  <p className="text-gray-600">
-                    {new Date(project.startDate).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-              {project.endDate && (
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <div className="text-sm">
-                    <p className="font-medium text-gray-900">End Date</p>
-                    <p className="text-gray-600">
-                      {new Date(project.endDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-gray-400" />
-                <div className="text-sm">
-                  <p className="font-medium text-gray-900">Team Members</p>
-                  <p className="text-gray-600">
-                    {project.teamMembers ? project.teamMembers.length : 0}{" "}
-                    members
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="h-4 w-4 text-gray-400" />
-                <div className="text-sm">
-                  <p className="font-medium text-gray-900">Progress</p>
-                  <p className="text-gray-600">
-                    {Math.round(taskProgress)}% complete
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* progress bar */}
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-gray-900">
-                  Overall Progress
+        {/* Project header */}
+        <div className="bg-white dark:bg-gray-900 shadow rounded-xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[project.status] ?? STATUS_BADGE.active}`}>
+                  {project.status}
                 </span>
-                <span className="text-gray-600">
-                  {completedTasks}/{totalTasks} tasks completed
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${PRIORITY_BADGE[project.priority] ?? PRIORITY_BADGE.medium}`}>
+                  {project.priority} priority
                 </span>
               </div>
-              <div className="mt-2 bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${taskProgress}%` }}
-                ></div>
-              </div>
             </div>
-
-            {/* tags */}
-            {project.tags && project.tags.length > 0 && (
-              <div className="mt-4">
-                <div className="flex items-center space-x-2">
-                  <Tag className="h-4 w-4 text-gray-400" />
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+            <Link
+              href={`/dashboard/tasks/new?projectId=${project._id}`}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shrink-0"
+            >
+              <Plus className="h-4 w-4" /> Add Task
+            </Link>
           </div>
+
+          {project.description && (
+            <p className="mt-4 text-gray-600 dark:text-gray-400">{project.description}</p>
+          )}
+
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Start</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {new Date(project.startDate).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+            {project.endDate && (
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Deadline</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {new Date(project.endDate).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Team</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {project.teamMembers?.length ?? 0} members
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Progress</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {completedTasks}/{tasks.length} done
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+              <span>Overall progress</span>
+              <span>{Math.round(taskProgress)}%</span>
+            </div>
+            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+                style={{ width: `${taskProgress}%` }}
+              />
+            </div>
+          </div>
+
+          {project.tags && project.tags.length > 0 && (
+            <div className="mt-4 flex items-center gap-2 flex-wrap">
+              <Tag className="h-4 w-4 text-gray-400" />
+              {project.tags.map((tag) => (
+                <span key={tag} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* tasks section */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-5 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Tasks</h2>
+        {/* Task board */}
+        <div className="bg-white dark:bg-gray-900 shadow rounded-xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Tasks
+            </h2>
+            {/* View toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setView("kanban")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  view === "kanban"
+                    ? "bg-white dark:bg-gray-700 shadow text-indigo-600"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                }`}
+                title="Kanban view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setView("list")}
+                className={`p-1.5 rounded-md transition-colors ${
+                  view === "list"
+                    ? "bg-white dark:bg-gray-700 shadow text-indigo-600"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                }`}
+                title="List view"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {tasks.length === 0 ? (
+            <div className="text-center py-16">
+              <CheckCircle2 className="h-16 w-16 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-900 dark:text-white font-medium">No tasks yet</p>
+              <p className="text-gray-500 text-sm mt-1">Create the first task for this project</p>
               <Link
                 href={`/dashboard/tasks/new?projectId=${project._id}`}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Task
+                <Plus className="h-4 w-4" /> Add first task
               </Link>
             </div>
-          </div>
-
-          <div className="px-6 py-5">
-            {tasksLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-              </div>
-            ) : tasksArray.length === 0 ? (
-              <div className="text-center py-12">
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No tasks yet
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Get started by creating a new task for this project.
-                </p>
-                <div className="mt-6">
-                  <Link
-                    href={`/dashboard/tasks/new?projectId=${project._id}`}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add your first task
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {tasksArray.map((task) => (
-                  <div
-                    key={task._id}
-                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {task.title}
-                        </h4>
-                        {task.description && (
-                          <p className="mt-1 text-sm text-gray-600 truncate">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="mt-2 flex items-center space-x-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTaskStatusColor(
-                              task.status
-                            )}`}
-                          >
-                            {task.status}
-                          </span>
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
-                              task.priority
-                            )}`}
-                          >
-                            {task.priority}
-                          </span>
-                          {task.dueDate && (
-                            <span className="text-xs text-gray-500">
-                              Due: {new Date(task.dueDate).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-sm text-gray-400">
-                        #{task._id.slice(-6)}
-                      </span>
-                    </div>
+          ) : view === "kanban" ? (
+            <KanbanBoard
+              tasks={tasks}
+              projectId={project._id}
+              onTaskMove={handleTaskMove}
+            />
+          ) : (
+            <div className="space-y-2">
+              {tasks.map((task) => (
+                <div
+                  key={task._id}
+                  className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{task.title}</p>
+                    {task.description && (
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{task.description}</p>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_BADGE[task.priority] ?? PRIORITY_BADGE.medium}`}>
+                      {task.priority}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[task.status] ?? STATUS_BADGE.active}`}>
+                      {task.status.replace("_", " ")}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

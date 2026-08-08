@@ -487,7 +487,7 @@ export default function AnalyticsPage() {
                             cy="50%"
                             labelLine={false}
                             label={({ name, value, percent }) =>
-                              `${name}: ${value} (${(percent * 100).toFixed(
+                              `${name}: ${value} (${((percent as number) * 100).toFixed(
                                 0
                               )}%)`
                             }
@@ -542,7 +542,7 @@ export default function AnalyticsPage() {
                             cy="50%"
                             labelLine={false}
                             label={({ name, value, percent }) =>
-                              `${name}: ${value} (${(percent * 100).toFixed(
+                              `${name}: ${value} (${((percent as number) * 100).toFixed(
                                 0
                               )}%)`
                             }
