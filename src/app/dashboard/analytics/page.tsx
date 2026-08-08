@@ -35,8 +35,6 @@ import {
   Zap,
   Award,
   RefreshCw,
-  PlusCircle,
-  Users,
 } from "lucide-react";
 
 interface AnalyticsData {

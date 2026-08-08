@@ -105,7 +105,7 @@ function NewTaskPageContent() {
       } else {
         setErrors({ general: result.error || "Failed to create task" });
       }
-    } catch (error) {
+    } catch {
       setErrors({ general: "An error occurred while creating the task" });
     } finally {
       setLoading(false);
@@ -343,7 +343,7 @@ function NewTaskPageContent() {
                     </h3>
                     <p className="mt-1 text-sm text-blue-700">
                       This task will be associated with the selected project and
-                      will appear in the project's task list.
+                      will appear in the project&apos;s task list.
                     </p>
                   </div>
                 </div>

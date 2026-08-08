@@ -415,7 +415,7 @@ export default function AdminDashboard() {
               Access Denied
             </h2>
             <p className="text-gray-600 mb-4">
-              You don't have admin privileges to access this page. Only users
+              You don&apos;t have admin privileges to access this page. Only users
               with admin role can access the admin dashboard.
             </p>
             <p className="text-sm text-gray-500 mb-4">

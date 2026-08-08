@@ -9,7 +9,7 @@ const store: RateLimitStore = {};
 
 export function rateLimit({
   interval = 60 * 1000,
-  uniqueTokenPerInterval = 100,
+  uniqueTokenPerInterval: _uniqueTokenPerInterval = 100,
 } = {}) {
   return {
     check: (limit: number, token: string) =>
@@ -52,7 +52,7 @@ export async function withRateLimit(
   try {
     await limiter.check(limit, ip);
     return { success: true };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: "Rate limit exceeded. Please try again later.",

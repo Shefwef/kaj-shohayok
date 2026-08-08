@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const analysis = await aiService.analyzeWorkload(assigneeStats);
 
     return NextResponse.json(createApiResponse(true, analysis));
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       createApiResponse(false, null, "Internal server error"),
       { status: 500 }

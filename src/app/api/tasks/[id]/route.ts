@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import connectMongoDB from "@/lib/db/mongodb";
 import Task from "@/models/Task";
-import Project from "@/models/Project";
+import "@/models/Project";
 import { createApiResponse } from "@/lib/utils";
 import { withRateLimit } from "@/lib/rate-limit";
 import { updateTaskSchema } from "@/lib/validations/task";

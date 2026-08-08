@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/postgres";
 import { createApiResponse } from "@/lib/utils";
 import { withRateLimit } from "@/lib/rate-limit";
 import { createOrganizationSchema } from "@/lib/validations/auth";
-import { hasPermission, hasRole, ROLE_PERMISSIONS } from "@/lib/permissions";
+import { hasRole, ROLE_PERMISSIONS } from "@/lib/permissions";
 
 export const dynamic = 'force-dynamic';
 

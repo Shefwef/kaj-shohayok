@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     const notifications = await notificationService.getUnread(userId);
     return NextResponse.json(createApiResponse(true, notifications));
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       createApiResponse(false, null, "Internal server error"),
       { status: 500 }
@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json(createApiResponse(true, { success: true }));
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       createApiResponse(false, null, "Internal server error"),
       { status: 500 }

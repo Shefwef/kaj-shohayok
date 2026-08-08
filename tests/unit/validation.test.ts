@@ -1,5 +1,7 @@
 import { createProjectSchema } from "@/lib/validations/project";
 import { createTaskSchema } from "@/lib/validations/task";
+import { NotFoundError, UnauthorizedError, BusinessError, ValidationError } from "@/lib/errors";
+import { EventBus } from "@/lib/EventBus";
 
 describe("Project validation schema", () => {
   const validProject = {
@@ -75,8 +77,6 @@ describe("Task validation schema", () => {
 });
 
 describe("Error classes", () => {
-  const { NotFoundError, UnauthorizedError, BusinessError, ValidationError } =
-    require("@/lib/errors");
 
   test("NotFoundError has status 404", () => {
     const err = new NotFoundError("Not found");
@@ -101,7 +101,6 @@ describe("Error classes", () => {
 });
 
 describe("EventBus", () => {
-  const { EventBus } = require("@/lib/EventBus");
 
   beforeEach(() => {
     EventBus.clear();

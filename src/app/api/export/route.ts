@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     }
 
     return new NextResponse("Invalid type. Use 'tasks' or 'projects'.", { status: 400 });
-  } catch (error) {
+  } catch {
     return new NextResponse("Internal server error", { status: 500 });
   }
 }

@@ -57,7 +57,7 @@ export default function ReportsPage() {
       link.download = filename;
       link.click();
       URL.revokeObjectURL(link.href);
-    } catch (error) {
+    } catch {
       alert("An error occurred while generating the report.");
     } finally {
       setGenerating(false);
@@ -79,7 +79,7 @@ export default function ReportsPage() {
       link.download = filename;
       link.click();
       URL.revokeObjectURL(link.href);
-    } catch (error) {
+    } catch {
       alert("Export failed.");
     }
   };

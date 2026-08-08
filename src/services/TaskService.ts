@@ -15,7 +15,7 @@ export class TaskService {
     private readonly notificationService: NotificationService
   ) {}
 
-  async getTask(taskId: string, actorId: string): Promise<Task> {
+  async getTask(taskId: string, _actorId: string): Promise<Task> {
     const task = await this.taskRepo.findById(taskId);
     if (!task) throw new NotFoundError("Task not found");
     return task;

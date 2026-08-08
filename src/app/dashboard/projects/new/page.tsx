@@ -52,7 +52,7 @@ export default function NewProjectPage() {
       } else {
         setErrors({ general: result.error || "Failed to create project" });
       }
-    } catch (error) {
+    } catch {
       setErrors({ general: "An error occurred while creating the project" });
     } finally {
       setLoading(false);

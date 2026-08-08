@@ -1,4 +1,4 @@
-import { AuditRepository, AuditAction, AuditEntry } from "@/repositories/AuditRepository";
+import { AuditRepository, AuditEntry } from "@/repositories/AuditRepository";
 import { logger } from "@/lib/logger";
 
 export class AuditService {

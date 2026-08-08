@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   return NextResponse.json({
     message: "✅ POST request received!",
     timestamp: new Date().toISOString(),

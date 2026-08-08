@@ -8,7 +8,7 @@ import { prisma } from "@/lib/db/postgres";
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     console.log("🔄 Starting user sync from Clerk to PostgreSQL...");
 
