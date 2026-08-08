@@ -70,13 +70,13 @@ interface AnalyticsData {
 }
 
 const COLORS = {
-  primary: "#3B82F6",
+  primary: "#059669",
   success: "#10B981",
   warning: "#F59E0B",
   danger: "#EF4444",
-  purple: "#8B5CF6",
+  purple: "#047857",
   gray: "#6B7280",
-  indigo: "#6366F1",
+  indigo: "#10B981",
   pink: "#EC4899",
   cyan: "#06B6D4",
   emerald: "#059669",
@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="relative">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
@@ -134,7 +134,7 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 to-orange-100">
+      <div className="flex items-center justify-center h-64">
         <div className="text-center max-w-md">
           <AlertCircle className="h-20 w-20 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-800 mb-2">
@@ -155,7 +155,7 @@ export default function AnalyticsPage() {
 
   if (!analytics) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
+      <div className="flex items-center justify-center h-64">
         <div className="text-center max-w-lg">
           <BarChart3 className="h-24 w-24 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">

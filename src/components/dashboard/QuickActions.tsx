@@ -1,62 +1,68 @@
 "use client";
 
-import { Plus, FolderPlus, FileText, Users } from "lucide-react";
+import { FolderPlus, CirclePlus, BarChart2, Users } from "lucide-react";
 import Link from "next/link";
 
 const actions = [
   {
-    name: "Create Project",
+    name: "New Project",
     description: "Start a new project",
     href: "/dashboard/projects/new",
     icon: FolderPlus,
-    iconColor: "text-blue-600",
-    bgColor: "bg-blue-50",
+    iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    hoverBorder: "hover:border-emerald-200 dark:hover:border-emerald-800/50",
   },
   {
     name: "Add Task",
     description: "Create a new task",
     href: "/dashboard/tasks/new",
-    icon: Plus,
-    iconColor: "text-green-600",
-    bgColor: "bg-green-50",
+    icon: CirclePlus,
+    iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    hoverBorder: "hover:border-emerald-200 dark:hover:border-emerald-800/50",
   },
   {
-    name: "View Reports",
-    description: "Check analytics",
+    name: "Analytics",
+    description: "View your insights",
     href: "/dashboard/analytics",
-    icon: FileText,
-    iconColor: "text-purple-600",
-    bgColor: "bg-purple-50",
+    icon: BarChart2,
+    iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    hoverBorder: "hover:border-emerald-200 dark:hover:border-emerald-800/50",
   },
   {
-    name: "Team Management",
-    description: "Manage team members",
+    name: "Team",
+    description: "Manage your team",
     href: "/dashboard/team",
     icon: Users,
-    iconColor: "text-orange-600",
-    bgColor: "bg-orange-50",
+    iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    hoverBorder: "hover:border-emerald-200 dark:hover:border-emerald-800/50",
   },
 ];
 
 export default function QuickActions() {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 shadow-sm">
+      <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        Quick Actions
+      </h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {actions.map((action) => (
           <Link
             key={action.name}
             href={action.href}
-            className="relative group bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200"
+            className={`group flex flex-col gap-3 rounded-xl border border-gray-100 dark:border-emerald-900/20 bg-gray-50 dark:bg-gray-950 p-4 transition-all duration-200 hover:shadow-md ${action.hoverBorder} hover:bg-white dark:hover:bg-gray-900`}
           >
-            <div className={`inline-flex p-3 rounded-lg ${action.bgColor}`}>
-              <action.icon className={`h-6 w-6 ${action.iconColor}`} />
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${action.iconBg} ring-1 ring-emerald-100 dark:ring-emerald-900/30`}>
+              <action.icon className={`h-5 w-5 ${action.iconColor}`} strokeWidth={2} />
             </div>
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-900">
+            <div>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                 {action.name}
-              </h3>
-              <p className="text-sm text-gray-500 mt-1">{action.description}</p>
+              </p>
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{action.description}</p>
             </div>
           </Link>
         ))}

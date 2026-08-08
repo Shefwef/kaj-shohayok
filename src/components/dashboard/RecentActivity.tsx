@@ -18,10 +18,7 @@ interface Task {
   title: string;
   status: string;
   priority: string;
-  projectId?: {
-    _id: string;
-    name: string;
-  } | null;
+  projectId?: { _id: string; name: string } | null;
   createdAt: string;
 }
 
@@ -35,41 +32,18 @@ export default function RecentActivity() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRecentData = async () => {
-      try {
-        const response = await fetch("/api/analytics");
-        const result = await response.json();
-        if (result.success) {
-          setRecentData(result.data.recent);
-        }
-      } catch (error) {
-        console.error("Error fetching recent data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecentData();
+    fetch("/api/analytics")
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setRecentData(d.data.recent); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {[...Array(2)].map((_, i) => (
-          <div
-            key={`loading-card-${i}`}
-            className="animate-pulse bg-white rounded-lg shadow p-6"
-          >
-            <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div className="space-y-3">
-              {[...Array(3)].map((_, j) => (
-                <div
-                  key={`loading-item-${i}-${j}`}
-                  className="h-16 bg-gray-200 rounded"
-                ></div>
-              ))}
-            </div>
-          </div>
+          <div key={i} className="animate-pulse rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 shadow-sm h-64" />
         ))}
       </div>
     );
@@ -77,127 +51,98 @@ export default function RecentActivity() {
 
   if (!recentData) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <p className="text-gray-500">No recent activity found</p>
+      <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 text-center shadow-sm">
+        <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity found</p>
       </div>
     );
   }
 
+  const SectionHeader = ({ title }: { title: string }) => (
+    <div className="mb-4 flex items-center justify-between">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{title}</h3>
+    </div>
+  );
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* recent projects */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Recent Projects</h3>
-        </div>
-        <div className="p-6">
-          {recentData.projects.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No recent projects</p>
-          ) : (
-            <div className="space-y-4">
-              {recentData.projects.map((project) => (
-                <Link
-                  key={project._id}
-                  href={`/dashboard/projects/${project._id}`}
-                  className="block p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {project.name}
-                      </h4>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Created {formatDateTime(project.createdAt)}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(
-                          project.status
-                        )}`}
-                      >
-                        {project.status}
-                      </span>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(
-                          project.priority
-                        )}`}
-                      >
-                        {project.priority}
-                      </span>
-                    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Recent Projects */}
+      <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 shadow-sm">
+        <SectionHeader title="Recent Projects" />
+        {recentData.projects.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No projects yet</p>
+        ) : (
+          <div className="space-y-3">
+            {recentData.projects.map((project) => (
+              <Link
+                key={project._id}
+                href={`/dashboard/projects/${project._id}`}
+                className="block rounded-xl border border-gray-100 dark:border-emerald-900/20 p-4 hover:border-emerald-200 dark:hover:border-emerald-800/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all duration-150"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{project.name}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{formatDateTime(project.createdAt)}</p>
                   </div>
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Progress</span>
-                      <span className="font-medium text-gray-900">
-                        {project.progress}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                      <div
-                        className="bg-indigo-600 h-2 rounded-full transition-all"
-                        style={{ width: `${project.progress}%` }}
-                      ></div>
-                    </div>
+                  <div className="flex shrink-0 gap-1.5">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${getStatusColor(project.status)}`}>
+                      {project.status}
+                    </span>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${getPriorityColor(project.priority)}`}>
+                      {project.priority}
+                    </span>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+                </div>
+                <div className="mt-3">
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span className="text-gray-400 dark:text-gray-500">Progress</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">{project.progress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* recent tasks */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Recent Tasks</h3>
-        </div>
-        <div className="p-6">
-          {recentData.tasks.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No recent tasks</p>
-          ) : (
-            <div className="space-y-4">
-              {recentData.tasks.map((task) => (
-                <Link
-                  key={task._id}
-                  href={`/dashboard/tasks/${task._id}`}
-                  className="block p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
-                        {task.title}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-1">
-                        in {task.projectId?.name || "No Project"}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Created {formatDateTime(task.createdAt)}
-                      </p>
-                    </div>
-                    <div className="flex flex-col space-y-1 ml-4">
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                          task.status
-                        )}`}
-                      >
-                        {task.status.replace("_", " ")}
-                      </span>
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
-                          task.priority
-                        )}`}
-                      >
-                        {task.priority}
-                      </span>
-                    </div>
+      {/* Recent Tasks */}
+      <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 shadow-sm">
+        <SectionHeader title="Recent Tasks" />
+        {recentData.tasks.length === 0 ? (
+          <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No tasks yet</p>
+        ) : (
+          <div className="space-y-3">
+            {recentData.tasks.map((task) => (
+              <Link
+                key={task._id}
+                href={`/dashboard/tasks/${task._id}`}
+                className="block rounded-xl border border-gray-100 dark:border-emerald-900/20 p-4 hover:border-emerald-200 dark:hover:border-emerald-800/40 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all duration-150"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{task.title}</p>
+                    <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                      {task.projectId?.name ?? "No Project"} · {formatDateTime(task.createdAt)}
+                    </p>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${getStatusColor(task.status)}`}>
+                      {task.status.replace("_", " ")}
+                    </span>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

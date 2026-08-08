@@ -1,67 +1,50 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FolderKanban, CheckSquare, Clock, TrendingUp } from "lucide-react";
+import { Kanban, CircleCheckBig, AlarmClock, TrendingUp } from "lucide-react";
 
 interface Analytics {
-  projects: {
-    total: number;
-    active: number;
-    completed: number;
-    archived: number;
-    averageProgress: number;
-  };
-  tasks: {
-    total: number;
-    todo: number;
-    inProgress: number;
-    review: number;
-    done: number;
-    overdue: number;
-    completionRate: string;
-  };
+  projects: { total: number; active: number; completed: number; archived: number; averageProgress: number };
+  tasks: { total: number; todo: number; inProgress: number; review: number; done: number; overdue: number; completionRate: string };
 }
+
+const skeletonCard = (
+  <div className="animate-pulse rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 shadow-sm">
+    <div className="flex items-center gap-4">
+      <div className="h-12 w-12 rounded-xl bg-gray-100 dark:bg-gray-800" />
+      <div className="flex-1 space-y-2">
+        <div className="h-3 w-24 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-7 w-16 rounded bg-gray-100 dark:bg-gray-800" />
+      </div>
+    </div>
+    <div className="mt-4 h-3 w-32 rounded bg-gray-100 dark:bg-gray-800" />
+  </div>
+);
 
 export default function DashboardStats() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const response = await fetch("/api/analytics");
-        const result = await response.json();
-        if (result.success) {
-          setAnalytics(result.data);
-        }
-      } catch (error) {
-        console.error("Error fetching analytics:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnalytics();
+    fetch("/api/analytics")
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setAnalytics(d.data); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="animate-pulse bg-white rounded-lg shadow p-6">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-full"></div>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => <div key={i}>{skeletonCard}</div>)}
       </div>
     );
   }
 
   if (!analytics) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <p className="text-gray-500">Unable to load analytics data</p>
+      <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 text-center shadow-sm">
+        <p className="text-gray-500 dark:text-gray-400">Unable to load analytics data</p>
       </div>
     );
   }
@@ -70,67 +53,73 @@ export default function DashboardStats() {
     {
       name: "Total Projects",
       value: analytics.projects.total,
-      change: `${analytics.projects.active} active`,
-      changeType: "neutral",
-      icon: FolderKanban,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      sub: `${analytics.projects.active} active`,
+      type: "neutral" as const,
+      icon: Kanban,
+      iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      ring: "ring-emerald-100 dark:ring-emerald-900/30",
     },
     {
       name: "Total Tasks",
       value: analytics.tasks.total,
-      change: `${analytics.tasks.done} completed`,
-      changeType: "positive",
-      icon: CheckSquare,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
+      sub: `${analytics.tasks.done} completed`,
+      type: "positive" as const,
+      icon: CircleCheckBig,
+      iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      ring: "ring-emerald-100 dark:ring-emerald-900/30",
     },
     {
       name: "Overdue Tasks",
       value: analytics.tasks.overdue,
-      change: "Need attention",
-      changeType: analytics.tasks.overdue > 0 ? "negative" : "neutral",
-      icon: Clock,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
+      sub: analytics.tasks.overdue > 0 ? "Need attention" : "All on time",
+      type: analytics.tasks.overdue > 0 ? "negative" as const : "neutral" as const,
+      icon: AlarmClock,
+      iconBg: analytics.tasks.overdue > 0 ? "bg-red-50 dark:bg-red-900/20" : "bg-emerald-50 dark:bg-emerald-900/20",
+      iconColor: analytics.tasks.overdue > 0 ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400",
+      ring: analytics.tasks.overdue > 0 ? "ring-red-100 dark:ring-red-900/30" : "ring-emerald-100 dark:ring-emerald-900/30",
     },
     {
       name: "Completion Rate",
       value: `${analytics.tasks.completionRate}%`,
-      change: "Overall progress",
-      changeType: "positive",
+      sub: "Overall progress",
+      type: "positive" as const,
       icon: TrendingUp,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      ring: "ring-emerald-100 dark:ring-emerald-900/30",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
-        <div key={stat.name} className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className={`inline-flex p-3 rounded-lg ${stat.bgColor}`}>
-              <stat.icon className={`h-6 w-6 ${stat.color}`} />
+        <div
+          key={stat.name}
+          className="group rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-emerald-900/20 p-6 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/40 transition-all duration-200"
+        >
+          <div className="flex items-start gap-4">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-xl ring-1 ${stat.iconBg} ${stat.ring} shrink-0`}>
+              <stat.icon className={`h-6 w-6 ${stat.iconColor}`} strokeWidth={2} />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {stat.value}
-              </p>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{stat.name}</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
             </div>
           </div>
-          <div className="mt-4">
-            <p
-              className={`text-sm ${
-                stat.changeType === "positive"
-                  ? "text-green-600"
-                  : stat.changeType === "negative"
-                  ? "text-red-600"
-                  : "text-gray-500"
+          <div className="mt-4 flex items-center gap-1.5">
+            <span
+              className={`inline-block h-1.5 w-1.5 rounded-full ${
+                stat.type === "positive" ? "bg-emerald-500" : stat.type === "negative" ? "bg-red-500" : "bg-gray-300 dark:bg-gray-600"
               }`}
-            >
-              {stat.change}
+            />
+            <p className={`text-xs font-medium ${
+              stat.type === "positive" ? "text-emerald-600 dark:text-emerald-400" :
+              stat.type === "negative" ? "text-red-500 dark:text-red-400" :
+              "text-gray-500 dark:text-gray-400"
+            }`}>
+              {stat.sub}
             </p>
           </div>
         </div>
