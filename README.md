@@ -133,13 +133,13 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    A[User Signs Up\nvia Clerk] --> B{Clerk Webhook}
-    B --> C[/api/webhooks/clerk]
-    C --> D[Create User in PostgreSQL\nwith default Member role]
+    A["User Signs Up via Clerk"] --> B{Clerk Webhook}
+    B --> C["POST /api/webhooks/clerk"]
+    C --> D["Create User in PostgreSQL with default Member role"]
 
     E[User Logs In] --> F[Clerk Session Token]
     F --> G[Every API Request]
-    G --> H{Check Role\nin PostgreSQL}
+    G --> H{"Check Role in PostgreSQL"}
     H -->|Admin| I[Full Access]
     H -->|Manager| J[Projects + Team]
     H -->|Member| K[Tasks + Read]
@@ -147,7 +147,7 @@ flowchart LR
 
     M[Admin Panel] --> N[Change User Role]
     N --> O[PostgreSQL UPDATE]
-    O --> P[Takes effect immediately\non next request]
+    O --> P["Takes effect immediately on next request"]
 ```
 
 ---
