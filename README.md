@@ -505,6 +505,3 @@ It's fast, cheap, has a generous free tier (1M tokens/day), and supports functio
 **Why the Repository → Service → API pattern?**
 Each layer has one job. Repositories only care about reading/writing data. Services only care about business rules. API routes only care about HTTP. Adding a new feature (say, Slack notifications) means adding one new subscriber to the EventBus — zero changes to the service layer.
 
----
-
-*Built by [Shefwef](https://github.com/Shefwef) · Next.js 15 · Gemini 2.0 Flash · PostgreSQL + MongoDB*
