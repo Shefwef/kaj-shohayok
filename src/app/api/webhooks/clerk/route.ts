@@ -41,30 +41,31 @@ async function handleUserCreated(userData: any) {
   try {
     console.log("Creating user in database:", userData.id);
 
-    // Get default member role
-    const defaultRole = await prisma.role.findFirst({
-      where: { name: "member" },
+    const email = userData.email_addresses?.[0]?.email_address || "";
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const isAdmin = adminEmail && email.toLowerCase() === adminEmail.toLowerCase();
+
+    const role = await prisma.role.findFirst({
+      where: { name: isAdmin ? "admin" : "member" },
     });
 
-    // Get default organization
     const defaultOrg = await prisma.organization.findFirst({
       where: { slug: "default" },
     });
 
-    // Create user in database
     await prisma.user.create({
       data: {
         clerkId: userData.id,
-        email: userData.email_addresses?.[0]?.email_address || "",
+        email,
         firstName: userData.first_name || "",
         lastName: userData.last_name || "",
         avatarUrl: userData.image_url || null,
-        roleId: defaultRole?.id || null,
+        roleId: role?.id || null,
         organizationId: defaultOrg?.id || null,
       },
     });
 
-    console.log("✅ User created in database");
+    console.log(`✅ User created in database with role: ${isAdmin ? "admin" : "member"}`);
   } catch (error) {
     console.error("Error creating user:", error);
   }

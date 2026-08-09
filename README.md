@@ -354,16 +354,16 @@ Add these GitHub Secrets to enable the full pipeline:
 
 ## Getting Admin Access
 
-New users are assigned the **Member** role by default. To grant yourself Admin:
+Use the default admin credentials from `.env.example` to sign up and get full Admin access:
 
-```sql
--- Run this in pgAdmin or psql
-UPDATE "User"
-SET "roleId" = (SELECT id FROM "Role" WHERE name = 'admin')
-WHERE "clerkId" = 'your_clerk_user_id';
-```
+| Field | Value |
+|-------|-------|
+| Email | `admin@kajshohayok.com` |
+| Password | `Admin@KS2025!` |
 
-Find your Clerk user ID: go to [dashboard.clerk.com](https://dashboard.clerk.com) → Users → click your account.
+Sign up at `/sign-up` with those credentials. The app auto-assigns the **Admin** role to whichever email matches `ADMIN_EMAIL` in your environment — so the admin panel at `/dashboard/admin` will be accessible immediately after sign-up.
+
+To use a different admin account, update `ADMIN_EMAIL` and `ADMIN_PASSWORD` in your `.env` file before signing up.
 
 ---
 
