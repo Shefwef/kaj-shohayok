@@ -3,6 +3,7 @@
 # Kaj Shohayok
 ### Enterprise Task Management Platform
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-kaj--shohayok.vercel.app-emerald?logo=vercel&logoColor=white)](https://kaj-shohayok.vercel.app)
 [![CI/CD Pipeline](https://github.com/Shefwef/kaj-shohayok/actions/workflows/ci.yml/badge.svg)](https://github.com/Shefwef/kaj-shohayok/actions)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://typescriptlang.org)
@@ -16,6 +17,8 @@ Kaj Shohayok is a production-ready, full-stack task management platform you can 
 - **Role-based access** — four roles (Admin, Manager, Member, Viewer) with 12 granular permissions, enforced at every API endpoint.
 - **Dual-database architecture** — PostgreSQL for transactional RBAC data, MongoDB for flexible task and project content.
 - **Dark mode** — system-aware theme with persistent sidebar toggle.
+
+**[Live Demo →](https://kaj-shohayok.vercel.app)**
 
 [Quick Start](#quick-start) · [Architecture](#architecture) · [Features](#features) · [API Reference](#api-reference) · [Deploy](#deploy-to-vercel)
 
@@ -305,6 +308,10 @@ UPSTASH_REDIS_REST_TOKEN="..."
 | Redis | [Upstash](https://upstash.com) | 10,000 requests/day |
 | Auth | [Clerk](https://clerk.com) | 10,000 MAU |
 | AI | [Gemini 2.0 Flash](https://aistudio.google.com) | 1M tokens/day |
+
+### Live Deployment
+
+**[https://kaj-shohayok.vercel.app](https://kaj-shohayok.vercel.app)**
 
 ### Steps
 
